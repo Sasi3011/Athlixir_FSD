@@ -1,18 +1,44 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import Logo from "../components/Logo";
+import { auth } from "../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
 
 const Login = () => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            navigate("/athlete/dashboard");
+        }
+    }, [user, navigate]);
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Login submitted:", formData);
+        setError("");
+        setLoading(true);
+
+        try {
+            await signInWithEmailAndPassword(auth, formData.email, formData.password);
+            console.log("Logged in successfully");
+            navigate("/athlete/dashboard"); // Redirect to athlete portal after login
+        } catch (err) {
+            console.error(err);
+            setError("Invalid email or access key. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -62,6 +88,12 @@ const Login = () => {
 
                 {/* Login Card */}
                 <div className="bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold uppercase tracking-widest text-center">
+                            {error}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Email Field */}
                         <div className="space-y-3">
@@ -77,6 +109,7 @@ const Login = () => {
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     required
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
@@ -98,6 +131,7 @@ const Login = () => {
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     required
+                                    disabled={loading}
                                 />
                             </div>
                         </div>
@@ -105,10 +139,17 @@ const Login = () => {
                         {/* Login Button */}
                         <button
                             type="submit"
-                            className="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:bg-orange-600 transition-all shadow-[0_10px_30px_rgba(255,87,34,0.3)] hover:shadow-[0_15px_40px_rgba(255,87,34,0.5)] flex items-center justify-center gap-3 group mt-4 uppercase tracking-widest text-base"
+                            disabled={loading}
+                            className="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:bg-orange-600 transition-all shadow-[0_10px_30px_rgba(255,87,34,0.3)] hover:shadow-[0_15px_40px_rgba(255,87,34,0.5)] flex items-center justify-center gap-3 group mt-4 uppercase tracking-widest text-base disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Verify Identity
-                            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                            {loading ? (
+                                <Loader2 className="w-6 h-6 animate-spin" />
+                            ) : (
+                                <>
+                                    Verify Identity
+                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>
