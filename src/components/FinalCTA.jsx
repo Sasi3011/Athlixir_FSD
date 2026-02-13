@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const FinalCTA = () => {
     return (
         <section className="relative h-[500px] md:h-[650px] flex items-center justify-center overflow-hidden bg-black">
-            {/* Background Image */}
+            {/* ... lines 6-42 unchanged ... */}
             <div className="absolute inset-0 z-0">
                 <img
                     src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1305&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -41,12 +42,18 @@ const FinalCTA = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center items-center space-y-5 sm:space-y-0 sm:space-x-8">
-                    <button className="px-12 py-5 bg-primary text-white font-bold rounded-full hover:bg-orange-600 transition-all shadow-[0_0_30px_rgba(255,87,34,0.4)] text-sm uppercase tracking-widest hover:scale-105 min-w-[240px]">
+                    <Link
+                        to="/signup"
+                        className="px-12 py-5 bg-primary text-white font-bold rounded-full hover:bg-orange-600 transition-all shadow-[0_0_30px_rgba(255,87,34,0.4)] text-sm uppercase tracking-widest hover:scale-105 min-w-[240px] flex items-center justify-center"
+                    >
                         Create Free Profile
-                    </button>
-                    <button className="px-12 py-5 bg-white/5 backdrop-blur-md border border-white/20 text-white font-bold rounded-full hover:bg-white hover:text-black transition-all text-sm uppercase tracking-widest min-w-[240px] hover:scale-105">
+                    </Link>
+                    <Link
+                        to="/login"
+                        className="px-12 py-5 bg-white/5 backdrop-blur-md border border-white/20 text-white font-bold rounded-full hover:bg-white hover:text-black transition-all text-sm uppercase tracking-widest min-w-[240px] hover:scale-105 flex items-center justify-center"
+                    >
                         Explore Platform
-                    </button>
+                    </Link>
                 </div>
             </div>
         </section>

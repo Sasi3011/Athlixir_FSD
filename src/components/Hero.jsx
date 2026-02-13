@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Shield, Check, Activity, Zap } from 'lucide-react';
 
 const Hero = () => {
     return (
         <section id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-background">
-            {/* Background Image */}
+            {/* ... background and floating cards lines 7-112 unchanged ... */}
             <div className="absolute inset-0 z-0">
                 <img
                     src="https://images.unsplash.com/photo-1459865264687-595d652de67e?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -147,12 +148,18 @@ const Hero = () => {
                     transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
                     className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-5"
                 >
-                    <button className="px-10 py-4 bg-primary text-white font-bold rounded-full hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(255,87,34,0.4)] text-sm uppercase tracking-widest hover:scale-105">
+                    <Link
+                        to="/signup"
+                        className="px-10 py-4 bg-primary text-white font-bold rounded-full hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(255,87,34,0.4)] text-sm uppercase tracking-widest hover:scale-105 flex items-center justify-center"
+                    >
                         Get Started
-                    </button>
-                    <button className="px-10 py-4 bg-white/5 backdrop-blur-md border border-white/20 text-white font-bold rounded-full hover:bg-white hover:text-black transition-all text-sm uppercase tracking-widest hover:scale-105">
+                    </Link>
+                    <Link
+                        to="/login"
+                        className="px-10 py-4 bg-white/5 backdrop-blur-md border border-white/20 text-white font-bold rounded-full hover:bg-white hover:text-black transition-all text-sm uppercase tracking-widest hover:scale-105 flex items-center justify-center"
+                    >
                         Explore Platform
-                    </button>
+                    </Link>
                 </motion.div>
             </div>
         </section>
