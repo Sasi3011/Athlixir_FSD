@@ -1,17 +1,32 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Mail, ArrowRight, KeyRound } from "lucide-react";
+import { Mail, ArrowRight, KeyRound, Loader2 } from "lucide-react";
 import Logo from "../components/Logo";
+import { auth } from "../firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const ResetKey = () => {
     const [email, setEmail] = useState("");
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Reset requested for:", email);
-        setIsSubmitted(true);
+        setError("");
+        setLoading(true);
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            console.log("Reset requested for:", email);
+            setIsSubmitted(true);
+        } catch (err) {
+            console.error(err);
+            setError("Could not find an athlete profile with this email.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -63,6 +78,12 @@ const ResetKey = () => {
 
                         {/* Reset Card */}
                         <div className="bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                            {error && (
+                                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold uppercase tracking-widest text-center">
+                                    {error}
+                                </div>
+                            )}
+
                             <form onSubmit={handleSubmit} className="space-y-8">
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-1">Registered ID / Email</label>
@@ -77,16 +98,24 @@ const ResetKey = () => {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             required
+                                            disabled={loading}
                                         />
                                     </div>
                                 </div>
 
                                 <button
                                     type="submit"
-                                    className="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:bg-orange-600 transition-all shadow-[0_10px_30px_rgba(255,87,34,0.3)] hover:shadow-[0_15px_40px_rgba(255,87,34,0.5)] flex items-center justify-center gap-3 group uppercase tracking-widest text-sm"
+                                    disabled={loading}
+                                    className="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:bg-orange-600 transition-all shadow-[0_10px_30px_rgba(255,87,34,0.3)] hover:shadow-[0_15px_40px_rgba(255,87,34,0.5)] flex items-center justify-center gap-3 group uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Send Recovery Link
-                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    {loading ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            Send Recovery Link
+                                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        </>
+                                    )}
                                 </button>
                             </form>
                         </div>
