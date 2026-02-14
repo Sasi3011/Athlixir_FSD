@@ -14,7 +14,14 @@ const Signup = () => {
 
     useEffect(() => {
         if (user) {
-            navigate("/athlete/dashboard");
+            const role = localStorage.getItem(`role_${user.uid}`) || 'athlete';
+            if (role === 'coach') {
+                navigate("/coach/dashboard");
+            } else if (role === 'user') {
+                navigate("/user/dashboard");
+            } else {
+                navigate("/athlete/dashboard");
+            }
         }
     }, [user, navigate]);
     const [formData, setFormData] = useState({
@@ -51,7 +58,13 @@ const Signup = () => {
             localStorage.setItem(`role_${userCredential.user.uid}`, formData.role);
 
             console.log("User created successfully with role:", formData.role);
-            navigate("/athlete/dashboard");
+            if (formData.role === 'coach') {
+                navigate("/coach/dashboard");
+            } else if (formData.role === 'user') {
+                navigate("/user/dashboard");
+            } else {
+                navigate("/athlete/dashboard");
+            }
         } catch (err) {
             console.error(err);
             setError(err.message.replace("Firebase: ", ""));

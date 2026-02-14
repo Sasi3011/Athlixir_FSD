@@ -14,7 +14,14 @@ const Login = () => {
 
     useEffect(() => {
         if (user) {
-            navigate("/athlete/dashboard");
+            const role = localStorage.getItem(`role_${user.uid}`) || 'athlete';
+            if (role === 'coach') {
+                navigate("/coach/dashboard");
+            } else if (role === 'user') {
+                navigate("/user/dashboard");
+            } else {
+                navigate("/athlete/dashboard");
+            }
         }
     }, [user, navigate]);
     const [formData, setFormData] = useState({
@@ -32,7 +39,14 @@ const Login = () => {
         try {
             await signInWithEmailAndPassword(auth, formData.email, formData.password);
             console.log("Logged in successfully");
-            navigate("/athlete/dashboard"); // Redirect to athlete portal after login
+            const role = localStorage.getItem(`role_${auth.currentUser.uid}`) || 'athlete';
+            if (role === 'coach') {
+                navigate("/coach/dashboard");
+            } else if (role === 'user') {
+                navigate("/user/dashboard");
+            } else {
+                navigate("/athlete/dashboard");
+            }
         } catch (err) {
             console.error(err);
             setError("Invalid email or access key. Please try again.");
