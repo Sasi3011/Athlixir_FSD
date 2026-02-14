@@ -37,8 +37,23 @@ const Login = () => {
         setLoading(true);
 
         try {
+            // Check for Admin Credentials
+            const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+            const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+
+            if (adminEmail && adminPassword && formData.email === adminEmail && formData.password === adminPassword) {
+                console.log("Admin Logged in successfully");
+                localStorage.setItem('user_role', 'admin');
+                // Reload to trigger AuthContext to pick up admin session
+                window.location.href = '/admin/dashboard';
+                return;
+            }
+
             await signInWithEmailAndPassword(auth, formData.email, formData.password);
             console.log("Logged in successfully");
+            // Clear admin role if regular login succeeds
+            localStorage.removeItem('user_role');
+
             const role = localStorage.getItem(`role_${auth.currentUser.uid}`) || 'athlete';
             if (role === 'coach') {
                 navigate("/coach/dashboard");

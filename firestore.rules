@@ -1,0 +1,261 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isCoach() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'coach';
+    }
+    
+    function isVerified(athleteId) {
+      return get(/databases/$(database)/documents/athletes/$(athleteId)).data.verified == true;
+    }
+    
+    function isActive(athleteId) {
+      return get(/databases/$(database)/documents/athletes/$(athleteId)).data.status == 'active';
+    }
+
+    // ==================== ATHLETES ====================
+    
+    match /athletes/{athleteId} {
+      // Anyone can read active & verified athlete profiles (for public pages)
+      allow read: if isActive(athleteId);
+      
+      // Athlete can read their own profile regardless of status
+      allow read: if isOwner(athleteId);
+      
+      // Coaches and admins can read all athlete profiles
+      allow read: if isCoach() || isAdmin();
+      
+      // Athlete can update their own profile (except verified & status fields)
+      allow update: if isOwner(athleteId) && 
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified', 'status']);
+      
+      // Only admins can verify or change status
+      allow update: if isAdmin();
+      
+      // New athletes can create their profile
+      allow create: if isOwner(athleteId);
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+      
+      // ============ PERFORMANCE SUBCOLLECTION ============
+      match /performance/{performanceId} {
+        // Athlete can read their own performance
+        allow read: if isOwner(athleteId);
+        
+        // Coaches and admins can read athlete performance
+        allow read: if isCoach() || isAdmin();
+        
+        // Public can read performance of verified active athletes
+        allow read: if isVerified(athleteId) && isActive(athleteId);
+        
+        // Athlete can create/update their own performance logs
+        allow create, update: if isOwner(athleteId);
+        
+        // Athlete can delete their own logs
+        allow delete: if isOwner(athleteId);
+        
+        // Coaches and admins can delete
+        allow delete: if isCoach() || isAdmin();
+      }
+      
+      // ============ INJURIES SUBCOLLECTION ============
+      match /injuries/{injuryId} {
+        // Athlete can read their own injuries
+        allow read: if isOwner(athleteId);
+        
+        // Coaches and admins can read athlete injuries
+        allow read: if isCoach() || isAdmin();
+        
+        // Athlete can create/update their own injuries
+        allow create, update: if isOwner(athleteId);
+        
+        // Only admins can delete
+        allow delete: if isAdmin();
+      }
+      
+      // ============ FUNDING SUBCOLLECTION ============
+      match /funding/{fundingId} {
+        // Athlete can read their own funding requests
+        allow read: if isOwner(athleteId);
+        
+        // Admins and potential sponsors can read
+        allow read: if isAdmin() || isAuthenticated();
+        
+        // Athlete can create/update their own funding
+        allow create, update: if isOwner(athleteId);
+        
+        // Admins can delete
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // ==================== COACHES ====================
+    
+    match /coaches/{coachId} {
+      // Anyone can read active coach profiles
+      allow read: if true;
+      
+      // Coach can update their own profile
+      allow update: if isOwner(coachId);
+      
+      // Coach can create their profile
+      allow create: if isOwner(coachId);
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== USERS (Sponsors/Scouts) ====================
+    
+    match /users/{userId} {
+      // User can read their own profile
+      allow read: if isOwner(userId);
+      
+      // Admins can read all
+      allow read: if isAdmin();
+      
+      // User can update their own profile
+      allow update: if isOwner(userId);
+      
+      // User can create their profile
+      allow create: if isOwner(userId);
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ==================== OPPORTUNITIES ====================
+    
+    match /opportunities/{opportunityId} {
+      // Anyone can read active opportunities
+      allow read: if resource.data.status == 'active';
+      
+      // Coaches can read their own posted opportunities
+      allow read: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+      
+      // Admins can read all
+      allow read: if isAdmin();
+      
+      // Coaches and admins can create opportunities
+      allow create: if isCoach() || isAdmin();
+      
+      // Creator can update their own opportunities
+      allow update: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+      
+      // Admins can update/delete any
+      allow update, delete: if isAdmin();
+    }
+    
+    // ==================== EVENTS ====================
+    
+    match /events/{eventId} {
+      // Anyone can read events
+      allow read: if true;
+      
+      // Coaches and admins can create events
+      allow create: if isCoach() || isAdmin();
+      
+      // Creator can update their own events
+      allow update: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+      
+      // Admins can update/delete any
+      allow update, delete: if isAdmin();
+    }
+    
+    // ==================== LEADERBOARD ====================
+    
+    match /leaderboard/{athleteId} {
+      // Anyone can read leaderboard
+      allow read: if true;
+      
+      // No one can write directly (only through cloud functions or server)
+      allow write: if false;
+    }
+    
+    // ==================== MESSAGES/CONVERSATIONS ====================
+    
+    match /conversations/{conversationId} {
+      // Participants can read their conversations
+      allow read: if isAuthenticated() && 
+                    request.auth.uid in resource.data.participants;
+      
+      // Admins can read all
+      allow read: if isAdmin();
+      
+      // Participants can create conversations
+      allow create: if isAuthenticated() && 
+                      request.auth.uid in request.resource.data.participants;
+      
+      // Participants can update (for last message)
+      allow update: if isAuthenticated() && 
+                      request.auth.uid in resource.data.participants;
+      
+      // ============ MESSAGES SUBCOLLECTION ============
+      match /messages/{messageId} {
+        // Conversation participants can read messages
+        allow read: if isAuthenticated() && 
+                      request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        
+        // Participants can send messages
+        allow create: if isAuthenticated() && 
+                        request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants &&
+                        request.resource.data.senderId == request.auth.uid;
+        
+        // Sender can update their own messages (e.g., edit or delete)
+        allow update, delete: if isAuthenticated() && 
+                                resource.data.senderId == request.auth.uid;
+      }
+    }
+    
+    // ==================== NOTIFICATIONS ====================
+    
+    match /notifications/{userId}/{notificationId} {
+      // User can read their own notifications
+      allow read: if isOwner(userId);
+      
+      // User can mark notifications as read
+      allow update: if isOwner(userId);
+      
+      // System/admins can create notifications
+      allow create: if isAdmin();
+      
+      // User can delete their notifications
+      allow delete: if isOwner(userId);
+    }
+    
+    // ==================== ACADEMIES ====================
+    
+    match /academies/{academyId} {
+      // Anyone can read academies
+      allow read: if true;
+      
+      // Admins can create/update academies
+      allow create, update: if isAdmin();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

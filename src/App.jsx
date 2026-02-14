@@ -5,7 +5,14 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ResetKey from './pages/ResetKey';
 import Portal from './pages/Portal';
+import PublicAthleteProfile from './pages/PublicAthleteProfile';
+import NotificationCenter from './pages/NotificationCenter';
+import NotFound from './pages/NotFound';
 import { AuthProvider } from './context/AuthContext';
+import { AthleteProvider } from './context/AthleteContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { ToastProvider } from './context/ToastContext';
+import RoleProtectedRoute from './components/RoleProtectedRoute';
 
 // Athlete Portal Imports
 import AthleteLayout from './pages/AthletePortal/AthleteLayout';
@@ -45,78 +52,129 @@ import Sponsorships from './pages/UserPortal/Sponsorships';
 import UserMessages from './pages/UserPortal/Messages';
 import UserSettings from './pages/UserPortal/Settings';
 
-// Portal Mapping: Athlete (Data Tracking) | Coach (Monitoring) | User (Discovery)
+// Admin Portal Imports
+import AdminLayout from './pages/AdminPortal/AdminLayout';
+import AdminDashboard from './pages/AdminPortal/Dashboard';
+import UsersManagement from './pages/AdminPortal/UsersManagement';
+import AthleteVerification from './pages/AdminPortal/AthleteVerification';
+import ManageOpportunities from './pages/AdminPortal/ManageOpportunities';
+import AcademyApprovals from './pages/AdminPortal/AcademyApprovals';
+import EventModeration from './pages/AdminPortal/EventModeration';
+import SystemLogs from './pages/AdminPortal/SystemLogs';
+import ReportsAnalytics from './pages/AdminPortal/ReportsAnalytics';
+import AdminMessages from './pages/AdminPortal/Messages';
+import AdminSettings from './pages/AdminPortal/Settings';
+
+// Portal Mapping: Athlete (Data Tracking) | Coach (Monitoring) | User (Discovery) | Admin (Management)
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="min-h-screen bg-background text-white font-sans selection:bg-primary selection:text-black">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <Navbar />
-                  <Home />
-                </>
-              }
-            />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/reset-key" element={<ResetKey />} />
-            <Route path="/portal" element={<Portal />} />
+        <AthleteProvider>
+          <NotificationProvider>
+            <ToastProvider>
+              <div className="min-h-screen bg-background text-white font-sans selection:bg-primary selection:text-black">
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                      <>
+                        <Navbar />
+                        <Home />
+                      </>
+                    }
+                  />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/reset-key" element={<ResetKey />} />
+                  <Route path="/portal" element={<Portal />} />
 
-            {/* Athlete Portal Nested Routes */}
-            <Route path="/athlete" element={<AthleteLayout />}>
-              <Route index element={<Navigate to="/athlete/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="performance" element={<PerformanceLog />} />
-              <Route path="injury" element={<InjuryRecovery />} />
-              <Route path="leaderboard" element={<Leaderboard />} />
-              <Route path="opportunities" element={<Opportunities />} />
-              <Route path="academies" element={<AcademyLocator />} />
-              <Route path="events" element={<Events />} />
-              <Route path="messages" element={<Messages />} />
-              <Route path="funding" element={<Funding />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+                  {/* Public Athlete Profile - No authentication required */}
+                  <Route path="/athlete/public/:id" element={<PublicAthleteProfile />} />
 
-            {/* Coach Portal Nested Routes */}
-            <Route path="/coach" element={<CoachLayout />}>
-              <Route index element={<Navigate to="/coach/dashboard" replace />} />
-              <Route path="dashboard" element={<CoachDashboard />} />
-              <Route path="athletes" element={<MyAthletes />} />
-              <Route path="performance" element={<PerformanceMonitoring />} />
-              <Route path="injury" element={<InjuryReports />} />
-              <Route path="team-analytics" element={<TeamAnalytics />} />
-              <Route path="events" element={<EventsManagement />} />
-              <Route path="opportunities" element={<OpportunitiesPosted />} />
-              <Route path="messages" element={<CoachMessages />} />
-              <Route path="settings" element={<CoachSettings />} />
-            </Route>
+                  {/* Notification Center - Requires authentication */}
+                  <Route path="/notifications" element={<NotificationCenter />} />
 
-            {/* User Portal Nested Routes */}
-            <Route path="/user" element={<UserLayout />}>
-              <Route index element={<Navigate to="/user/dashboard" replace />} />
-              <Route path="dashboard" element={<UserDashboard />} />
-              <Route path="athletes" element={<ExploreAthletes />} />
-              <Route path="leaderboard" element={<UserLeaderboard />} />
-              <Route path="events" element={<UserEvents />} />
-              <Route path="academies" element={<AcademiesDirectory />} />
-              <Route path="opportunities" element={<UserOpportunities />} />
-              <Route path="sponsorships" element={<Sponsorships />} />
-              <Route path="messages" element={<UserMessages />} />
-              <Route path="settings" element={<UserSettings />} />
-            </Route>
+                  {/* Athlete Portal Nested Routes - Protected */}
+                  <Route element={<RoleProtectedRoute allowedRoles="athlete" />}>
+                    <Route path="/athlete" element={<AthleteLayout />}>
+                      <Route index element={<Navigate to="/athlete/dashboard" replace />} />
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="profile" element={<Profile />} />
+                      <Route path="performance" element={<PerformanceLog />} />
+                      <Route path="injury" element={<InjuryRecovery />} />
+                      <Route path="leaderboard" element={<Leaderboard />} />
+                      <Route path="opportunities" element={<Opportunities />} />
+                      <Route path="academies" element={<AcademyLocator />} />
+                      <Route path="events" element={<Events />} />
+                      <Route path="messages" element={<Messages />} />
+                      <Route path="funding" element={<Funding />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                    </Route>
+                  </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
+                  {/* Coach Portal Nested Routes - Protected */}
+                  <Route element={<RoleProtectedRoute allowedRoles="coach" />}>
+                    <Route path="/coach" element={<CoachLayout />}>
+                      <Route index element={<Navigate to="/coach/dashboard" replace />} />
+                      <Route path="dashboard" element={<CoachDashboard />} />
+                      <Route path="athletes" element={<MyAthletes />} />
+                      <Route path="performance" element={<PerformanceMonitoring />} />
+                      <Route path="injury" element={<InjuryReports />} />
+                      <Route path="team-analytics" element={<TeamAnalytics />} />
+                      <Route path="events" element={<EventsManagement />} />
+                      <Route path="opportunities" element={<OpportunitiesPosted />} />
+                      <Route path="messages" element={<CoachMessages />} />
+                      <Route path="settings" element={<CoachSettings />} />
+                    </Route>
+                  </Route>
+
+                  {/* User Portal Nested Routes - Protected */}
+                  <Route element={<RoleProtectedRoute allowedRoles="user" />}>
+                    <Route path="/user" element={<UserLayout />}>
+                      <Route index element={<Navigate to="/user/dashboard" replace />} />
+                      <Route path="dashboard" element={<UserDashboard />} />
+                      <Route path="athletes" element={<ExploreAthletes />} />
+                      <Route path="leaderboard" element={<UserLeaderboard />} />
+                      <Route path="events" element={<UserEvents />} />
+                      <Route path="academies" element={<AcademiesDirectory />} />
+                      <Route path="opportunities" element={<UserOpportunities />} />
+                      <Route path="sponsorships" element={<Sponsorships />} />
+                      <Route path="messages" element={<UserMessages />} />
+                      <Route path="settings" element={<UserSettings />} />
+                    </Route>
+                  </Route>
+
+                  {/* Admin Portal Nested Routes - Protected */}
+                  <Route element={<RoleProtectedRoute allowedRoles="admin" />}>
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="users" element={<UsersManagement />} />
+                      <Route path="verify" element={<AthleteVerification />} />
+                      <Route path="opportunities" element={<ManageOpportunities />} />
+                      <Route path="academies" element={<AcademyApprovals />} />
+                      <Route path="events" element={<EventModeration />} />
+                      <Route path="logs" element={<SystemLogs />} />
+                      <Route path="reports" element={<ReportsAnalytics />} />
+                      <Route path="messages" element={<AdminMessages />} />
+                      <Route path="settings" element={<AdminSettings />} />
+                    </Route>
+                  </Route>
+
+                  {/* Fallback - Custom 404 Page */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </ToastProvider>
+          </NotificationProvider>
+        </AthleteProvider>
       </AuthProvider>
     </Router>
   );
 }
 
 export default App;
+
+
+

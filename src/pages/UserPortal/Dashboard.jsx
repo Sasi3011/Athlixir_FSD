@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
     TrendingUp, Calendar, Trophy, Handshake,
     ChevronRight, Star, MapPin, Zap, Target,
-    Users, ArrowUpRight, ShieldCheck, Activity
+    Users, ArrowUpRight, ShieldCheck, Activity, Globe
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";

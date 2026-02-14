@@ -41,29 +41,22 @@ const UserLayout = () => {
     return (
         <div className="min-h-screen bg-[#050505] text-white flex overflow-hidden font-sans">
             {/* Desktop Sidebar */}
-            <aside className={`hidden lg:flex flex-col bg-black/40 border-r border-white/5 transition-all duration-300 ${isSidebarOpen ? 'w-72' : 'w-20'}`}>
-                <div className="p-6 flex items-center justify-between">
-                    <Logo iconOnly={!isSidebarOpen} className="scale-90" />
-                    {isSidebarOpen && (
-                        <button
-                            onClick={() => setIsSidebarOpen(false)}
-                            className="p-1.5 hover:bg-white/5 rounded-lg text-gray-500 transition-colors"
-                        >
-                            <ChevronRight className="rotate-180" size={18} />
-                        </button>
-                    )}
-                </div>
+            <aside className={`hidden lg:flex flex-col bg-black/40 border-r border-white/5 transition-all duration-300 relative ${isSidebarOpen ? 'w-72' : 'w-20'}`}>
+                {/* Sidebar Toggle Button */}
+                <button
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    className="absolute -right-3 top-8 z-50 w-6 h-6 bg-primary rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-primary/30 border-2 border-[#050505]"
+                    title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                >
+                    <ChevronRight
+                        size={14}
+                        className={`text-black transition-transform duration-300 ${isSidebarOpen ? 'rotate-180' : ''}`}
+                    />
+                </button>
 
-                {!isSidebarOpen && (
-                    <div className="flex justify-center mb-4">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="p-1.5 hover:bg-white/5 rounded-lg text-gray-500 transition-colors"
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
-                )}
+                <div className="p-6 flex items-center gap-3">
+                    <Logo iconOnly={!isSidebarOpen} className="scale-90" />
+                </div>
 
                 <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto scrollbar-hide">
                     {SIDEBAR_LINKS.map((link) => {
@@ -76,6 +69,7 @@ const UserLayout = () => {
                                     ? "bg-primary text-white shadow-lg shadow-primary/20"
                                     : "text-gray-400 hover:text-white hover:bg-white/5"
                                     }`}
+                                title={!isSidebarOpen ? link.name : ''}
                             >
                                 <link.icon size={20} className={isActive ? "text-white" : "group-hover:text-primary transition-colors"} />
                                 {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider whitespace-nowrap">{link.name}</span>}
@@ -88,6 +82,7 @@ const UserLayout = () => {
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-4 px-4 py-3 w-full text-gray-500 hover:text-red-500 transition-colors group"
+                        title={!isSidebarOpen ? "Sign Out" : ''}
                     >
                         <LogOut size={20} />
                         {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">Sign Out</span>}

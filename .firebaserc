@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "athlixir-82148"
+  },
   "targets": {},
   "etags": {}
 }

@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files (use Vercel dashboard for env vars)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build output (Vercel will build)
+dist
+build
+
+# Documentation (not needed for deployment)
+*.md
+!README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Firebase
+.firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+*.log
+.cache
