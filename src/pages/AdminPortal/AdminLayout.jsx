@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import Logo from "../../components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
 
 const SIDEBAR_LINKS = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -23,6 +24,7 @@ const SIDEBAR_LINKS = [
 const AdminLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -38,10 +40,15 @@ const AdminLayout = () => {
         */
     }, [navigate]);
 
-    const handleLogout = () => {
-        localStorage.removeItem('user_role');
-        // Clear other auth items if necessary
-        navigate("/login");
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate("/login");
+        } catch (error) {
+            console.error("Logout error:", error);
+            localStorage.removeItem('user_role');
+            navigate("/login");
+        }
     };
 
     return (
