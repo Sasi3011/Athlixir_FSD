@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
+import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ResetKey from './pages/ResetKey';
@@ -65,6 +66,37 @@ import ReportsAnalytics from './pages/AdminPortal/ReportsAnalytics';
 import AdminMessages from './pages/AdminPortal/Messages';
 import AdminSettings from './pages/AdminPortal/Settings';
 
+// Added auth redirect fix: redirect logged-in users from landing to dashboard; show loading during auth check to avoid blank page
+function LandingOrRedirect() {
+  const { currentUser, userRole, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-medium">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+  if (currentUser) {
+    const roleRedirects = {
+      athlete: '/athlete/dashboard',
+      coach: '/coach/dashboard',
+      user: '/user/dashboard',
+      admin: '/admin/dashboard',
+    };
+    const to = roleRedirects[userRole] || '/portal';
+    return <Navigate to={to} replace />;
+  }
+  return (
+    <>
+      <Navbar />
+      <Home />
+    </>
+  );
+}
+
 // Portal Mapping: Athlete (Data Tracking) | Coach (Monitoring) | User (Discovery) | Admin (Management)
 function App() {
   return (
@@ -73,17 +105,10 @@ function App() {
         <AthleteProvider>
           <NotificationProvider>
             <ToastProvider>
-              <div className="min-h-screen bg-background text-white font-sans selection:bg-primary selection:text-black">
+              <div className="min-h-screen bg-background text-white font-sans selection:bg-primary selection:text-white">
                 <Routes>
-                  <Route
-                    path="/"
-                    element={
-                      <>
-                        <Navbar />
-                        <Home />
-                      </>
-                    }
-                  />
+                  {/* Removed old logic: landing always showed Navbar+Home; now redirect logged-in users to dashboard */}
+                  <Route path="/" element={<LandingOrRedirect />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/reset-key" element={<ResetKey />} />

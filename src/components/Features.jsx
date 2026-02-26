@@ -62,34 +62,6 @@ const Features = () => {
                                 </div>
                             ))}
                         </div>
-
-                        {/* Activity Sparkline for the 'gap' */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            className="hidden sm:flex flex-col justify-end p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 p-3 opacity-20">
-                                <TrendingUp size={40} className="text-primary" />
-                            </div>
-                            <div className="relative z-10">
-                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-3">Live Performance</div>
-                                <div className="flex items-end space-x-1 h-12">
-                                    {[40, 70, 45, 90, 65, 80, 50, 95].map((h, i) => (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ height: 0 }}
-                                            whileInView={{ height: `${h}%` }}
-                                            transition={{ duration: 1, delay: i * 0.1 }}
-                                            animate={{ height: [`${h}%`, `${Math.min(100, h + 15)}%`, `${h}%`] }}
-                                            server-only-transition={{ duration: 2, repeat: Infinity }}
-                                            className="w-full bg-primary/40 rounded-t-sm"
-                                            style={{ height: `${h}%` }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
                     </div>
 
                     {/* Secondary visual - 'Active Probes' to fill the lower right gap */}
