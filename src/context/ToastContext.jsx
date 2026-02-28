@@ -36,7 +36,7 @@ export const ToastProvider = ({ children }) => {
 
     // Convenient methods
     const success = (message, options = {}) => addToast({ type: 'success', message, ...options });
-    const error = (message, options = {}) => addToast({ type: 'error', message, ...options });
+    const error = (message, options = {}) => addToast({ type: 'error', message, duration: 5000, ...options });
     const warning = (message, options = {}) => addToast({ type: 'warning', message, ...options });
     const info = (message, options = {}) => addToast({ type: 'info', message, ...options });
 

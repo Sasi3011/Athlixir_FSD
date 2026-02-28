@@ -38,6 +38,13 @@ export const AthleteProvider = ({ children }) => {
         return () => unsubscribe();
     }, []);
 
+    // Auto-dismiss error after 5 seconds
+    useEffect(() => {
+        if (!error) return;
+        const timer = setTimeout(() => setError(null), 5000);
+        return () => clearTimeout(timer);
+    }, [error]);
+
     /**
      * Get specific athlete profile with real-time updates
      */

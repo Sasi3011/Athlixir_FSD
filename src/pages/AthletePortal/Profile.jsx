@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
     User, Mail, MapPin, Award, ShieldCheck,
@@ -6,18 +6,23 @@ import {
     ChevronRight, CheckCircle2, Plus, Calendar
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useAthlete } from "../../context/AthleteContext";
 
 const Profile = () => {
     const { user } = useAuth();
+    const { useAthleteProfile } = useAthlete();
+    const { profile: savedProfile } = useAthleteProfile(user?.uid);
     const [isPublic, setIsPublic] = useState(true);
+
+    const displayName = savedProfile?.name || user?.displayName || "";
+    const age = savedProfile?.age ?? "";
+    const gender = savedProfile?.gender || "";
+    const sport = savedProfile?.primarySport || savedProfile?.sport || "";
+    const level = savedProfile?.currentLevel || "";
+    const locationText = [savedProfile?.district, savedProfile?.state].filter(Boolean).join(", ") || "—";
+
     const [profile, setProfile] = useState({
-        displayName: user?.displayName || "",
-        age: "19",
-        gender: "Male",
-        sport: "Football",
-        level: "College / Semi-Pro",
-        location: "Chennai, India",
-        bio: "Elite football player with high-intensity focus. Currently playing for University Blue Team. Scouting for professional opportunities.",
+        bio: "Elite athlete on the Athlixir ecosystem.",
         achievements: [
             { id: 1, title: "Best Striker", tournament: "State Inter-College", year: "2024", position: "1st" },
             { id: 2, title: "District MVP", tournament: "District Finals", year: "2023", position: "Winner" }
@@ -25,7 +30,6 @@ const Profile = () => {
     });
 
     const handleSave = () => {
-        // Mock save to local storage
         localStorage.setItem(`profile_${user?.uid}`, JSON.stringify(profile));
         alert("Profile synchronized with Athlixir Cloud!");
     };
@@ -43,7 +47,7 @@ const Profile = () => {
                                 {user?.photoURL ? (
                                     <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-6xl font-black text-primary italic uppercase">{user?.displayName?.charAt(0) || 'A'}</span>
+                                    <span className="text-6xl font-black text-primary italic uppercase">{(displayName || user?.displayName)?.charAt(0) || 'A'}</span>
                                 )}
                             </div>
                         </div>
@@ -54,23 +58,23 @@ const Profile = () => {
 
                     <div className="text-center md:text-left flex-1">
                         <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
-                            <h1 className="text-4xl font-black uppercase tracking-tight text-white">{profile.displayName}</h1>
+                            <h1 className="text-4xl font-black uppercase tracking-tight text-white">{displayName || "Athlete"}</h1>
                             <CheckCircle2 size={24} className="text-primary" />
                         </div>
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-gray-500 font-bold uppercase text-[10px] tracking-widest mb-6">
                             <span className="flex items-center gap-1.5"><Trophy size={14} className="text-primary" /> Elite Athlete</span>
                             <span className="px-1.5 opacity-30">|</span>
-                            <span className="flex items-center gap-1.5"><MapPin size={14} /> {profile.location}</span>
+                            <span className="flex items-center gap-1.5"><MapPin size={14} /> {locationText}</span>
                         </div>
 
                         <div className="flex flex-wrap justify-center md:justify-start gap-3">
                             <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sport</span>
-                                <span className="text-xs font-bold text-white uppercase">{profile.sport}</span>
+                                <span className="text-xs font-bold text-white uppercase">{sport || "—"}</span>
                             </div>
                             <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Level</span>
-                                <span className="text-xs font-bold text-white uppercase">{profile.level}</span>
+                                <span className="text-xs font-bold text-white uppercase">{level || "—"}</span>
                             </div>
                         </div>
                     </div>
@@ -152,10 +156,10 @@ const Profile = () => {
                         <h2 className="text-xl font-black uppercase tracking-tight text-white mb-8">Baseline Stats</h2>
                         <div className="space-y-6">
                             {[
-                                { label: "Full Identity", value: profile.displayName, icon: User },
-                                { label: "Age Group", value: profile.age, icon: Calendar },
-                                { label: "Gender Profile", value: profile.gender, icon: User },
-                                { label: "Base Location", value: profile.location, icon: MapPin },
+                                { label: "Full Identity", value: displayName, icon: User },
+                                { label: "Age Group", value: age, icon: Calendar },
+                                { label: "Gender Profile", value: gender, icon: User },
+                                { label: "Base Location", value: locationText, icon: MapPin },
                             ].map((item, i) => (
                                 <div key={i} className="flex flex-col gap-2">
                                     <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">

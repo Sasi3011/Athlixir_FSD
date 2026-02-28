@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Mail, ArrowRight, KeyRound, Loader2 } from "lucide-react";
 import Logo from "../components/Logo";
@@ -11,6 +11,13 @@ const ResetKey = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Auto-dismiss error after 5 seconds
+    useEffect(() => {
+        if (!error) return;
+        const timer = setTimeout(() => setError(""), 5000);
+        return () => clearTimeout(timer);
+    }, [error]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -77,12 +84,22 @@ const ResetKey = () => {
                         </div>
 
                         {/* Reset Card */}
-                        <div className="bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-                            {error && (
-                                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold uppercase tracking-widest text-center">
-                                    {error}
-                                </div>
-                            )}
+                        <div className="bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]" onFocusCapture={() => setError("")}>
+                            <AnimatePresence>
+                                {error && (
+                                    <motion.div
+                                        key="error"
+                                        initial={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                        transition={{ duration: 0.25, ease: "easeOut" }}
+                                        className="mb-6 overflow-hidden"
+                                    >
+                                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold uppercase tracking-widest text-center">
+                                            {error}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             <form onSubmit={handleSubmit} className="space-y-8">
                                 <div className="space-y-3">

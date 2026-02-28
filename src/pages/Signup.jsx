@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Loader2, Trophy, Users, Target } from "lucide-react";
 import Logo from "../components/Logo";
@@ -20,7 +20,7 @@ const Signup = () => {
             } else if (role === 'user') {
                 navigate("/user/dashboard");
             } else {
-                navigate("/athlete/dashboard");
+                navigate("/athlete/onboarding");
             }
         }
     }, [user, navigate]);
@@ -33,6 +33,13 @@ const Signup = () => {
     });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Auto-dismiss error after 5 seconds
+    useEffect(() => {
+        if (!error) return;
+        const timer = setTimeout(() => setError(""), 5000);
+        return () => clearTimeout(timer);
+    }, [error]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -63,7 +70,7 @@ const Signup = () => {
             } else if (formData.role === 'user') {
                 navigate("/user/dashboard");
             } else {
-                navigate("/athlete/dashboard");
+                navigate("/athlete/onboarding");
             }
         } catch (err) {
             console.error(err);
@@ -139,12 +146,22 @@ const Signup = () => {
                     </div>
 
                     {/* Form Area */}
-                    <div className="flex-1 p-8 md:p-10">
-                        {error && (
-                            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold uppercase tracking-widest text-center">
-                                {error}
-                            </div>
-                        )}
+                    <div className="flex-1 p-8 md:p-10" onFocusCapture={() => setError("")}>
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    key="error"
+                                    initial={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                    transition={{ duration: 0.25, ease: "easeOut" }}
+                                    className="mb-6 overflow-hidden"
+                                >
+                                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold uppercase tracking-widest text-center">
+                                        {error}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div className="space-y-1.5">

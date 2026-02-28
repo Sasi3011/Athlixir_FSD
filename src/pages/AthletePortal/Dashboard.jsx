@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
     Activity, Trophy, Calendar, Flame, ChevronRight,
-    LogIn, Plus, TrendingUp, Info
+    LogIn, Plus, TrendingUp, Info, MapPin
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useAthlete } from "../../context/AthleteContext";
 import {
     ResponsiveContainer, LineChart, Line, XAxis, YAxis,
     CartesianGrid, Tooltip, AreaChart, Area
@@ -12,6 +13,10 @@ import {
 
 const Dashboard = () => {
     const { user } = useAuth();
+    const { useAthleteProfile } = useAthlete();
+    const { profile } = useAthleteProfile(user?.uid);
+    const displayName = profile?.name || user?.displayName || "Athlete";
+    const locationText = [profile?.district, profile?.state].filter(Boolean).join(", ") || "—";
     const [performanceData, setPerformanceData] = useState([]);
     const [stats, setStats] = useState({
         trainingSessions: 42,
@@ -62,7 +67,7 @@ const Dashboard = () => {
                                 {user?.photoURL ? (
                                     <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-4xl font-black text-primary">{user?.displayName?.charAt(0) || 'A'}</span>
+                                    <span className="text-4xl font-black text-primary">{displayName?.charAt(0) || 'A'}</span>
                                 )}
                             </div>
                         </div>
@@ -73,15 +78,23 @@ const Dashboard = () => {
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl font-black uppercase tracking-tight text-white leading-none">
-                                Welcome, <span className="text-primary italic">{user?.displayName?.split(' ')[0] || "Athlete"}</span>
+                                Welcome, <span className="text-primary italic">{displayName?.split(' ')[0] || "Athlete"}</span>
                             </h1>
                             <span className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-500 text-[9px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                                 Elite Identity
                             </span>
                         </div>
-                        <p className="text-gray-500 mt-2 font-bold uppercase text-[10px] tracking-[0.2em]">
-                            Sport: Football • Level: College • High Academy verified
+                        <p className="text-gray-500 mt-2 font-bold uppercase text-[10px] tracking-[0.2em] flex items-center gap-1.5 flex-wrap">
+                            {profile?.primarySport && <span>Sport: {profile.primarySport}</span>}
+                            {profile?.primarySport && profile?.currentLevel && <span className="opacity-50">•</span>}
+                            {profile?.currentLevel && <span>Level: {profile.currentLevel}</span>}
+                            {(profile?.district || profile?.state) && (
+                                <>
+                                    <span className="opacity-50">•</span>
+                                    <span className="flex items-center gap-1"><MapPin size={10} /> {locationText}</span>
+                                </>
+                            )}
                         </p>
                     </div>
                 </div>

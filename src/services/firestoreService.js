@@ -24,6 +24,38 @@ import {
 
 // ==================== ATHLETES ====================
 
+/** Permanent athlete ID prefix and change limit for primary sport */
+const ATHLETE_ID_PREFIX = 'ATH';
+const PRIMARY_SPORT_CHANGE_LIMIT = 2;
+
+/**
+ * Generate permanent Athlete ID (e.g. ATH-202602-A1B2C)
+ * Locked at first save; prevents manipulation.
+ */
+export const generatePermanentAthleteId = () => {
+    const now = new Date();
+    const yymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const rand = Math.random().toString(36).slice(2, 7).toUpperCase();
+    return `${ATHLETE_ID_PREFIX}-${yymm}-${rand}`;
+};
+
+/**
+ * Get athlete profile once (no subscription)
+ */
+export const getAthleteProfile = async (athleteId) => {
+    try {
+        const athleteRef = doc(db, 'athletes', athleteId);
+        const snapshot = await getDoc(athleteRef);
+        if (snapshot.exists()) {
+            return { id: snapshot.id, ...snapshot.data() };
+        }
+        return null;
+    } catch (error) {
+        console.error('Error getting athlete profile:', error);
+        return null;
+    }
+};
+
 /**
  * Get athlete profile by ID with real-time updates
  * @param {string} athleteId - The athlete's user ID
@@ -85,15 +117,56 @@ export const subscribeToAthletes = (callback, filters = {}) => {
 };
 
 /**
- * Create or update athlete profile
+ * Create or update athlete profile.
+ * On first save: generates permanent athleteId, locks DOB, locks primary sport (with change limit).
+ * DOB is editable only via admin; primary sport change limited to PRIMARY_SPORT_CHANGE_LIMIT.
  */
-export const saveAthleteProfile = async (athleteId, profileData) => {
+const stripUndefined = (obj) => {
+    return Object.fromEntries(
+        Object.entries(obj).filter(([, v]) => v !== undefined)
+    );
+};
+
+export const saveAthleteProfile = async (firebaseUid, profileData) => {
     try {
-        const athleteRef = doc(db, 'athletes', athleteId);
-        await setDoc(athleteRef, {
-            ...profileData,
-            updatedAt: serverTimestamp()
-        }, { merge: true });
+        const athleteRef = doc(db, 'athletes', firebaseUid);
+        const existing = await getDoc(athleteRef);
+        const existingData = existing.exists() ? existing.data() : null;
+
+        let dataToSave = { ...stripUndefined(profileData), updatedAt: serverTimestamp() };
+
+        if (!existingData?.permanentAthleteId) {
+            // First save: generate permanent ID and set locks
+            dataToSave = {
+                ...dataToSave,
+                permanentAthleteId: generatePermanentAthleteId(),
+                dobLocked: true,
+                primarySportLocked: true,
+                primarySportChangeCount: 0,
+                primarySportChangeLimit: PRIMARY_SPORT_CHANGE_LIMIT,
+                onboardingComplete: false
+            };
+        } else {
+            // Preserve locked fields and enforce change limits
+            if (existingData.dobLocked && profileData.dateOfBirth !== undefined) {
+                delete dataToSave.dateOfBirth; // DOB editable only via admin
+            }
+            if (existingData.primarySportLocked && profileData.primarySport !== undefined) {
+                const count = existingData.primarySportChangeCount ?? 0;
+                const limit = existingData.primarySportChangeLimit ?? PRIMARY_SPORT_CHANGE_LIMIT;
+                if (count >= limit) {
+                    delete dataToSave.primarySport; // No more changes allowed
+                } else {
+                    dataToSave.primarySportChangeCount = count + 1;
+                }
+            }
+            if (dataToSave.onboardingComplete === undefined && existingData.onboardingComplete !== undefined) {
+                dataToSave.onboardingComplete = existingData.onboardingComplete;
+            }
+        }
+
+        const finalData = stripUndefined(dataToSave);
+        await setDoc(athleteRef, finalData, { merge: true });
         return { success: true };
     } catch (error) {
         console.error('Error saving athlete profile:', error);
@@ -567,6 +640,8 @@ export const createEvent = async (eventData) => {
 
 export default {
     // Athletes
+    getAthleteProfile,
+    generatePermanentAthleteId,
     subscribeToAthleteProfile,
     subscribeToAthletes,
     saveAthleteProfile,

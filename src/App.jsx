@@ -27,6 +27,7 @@ import AcademyLocator from './pages/AthletePortal/AcademyLocator';
 import Events from './pages/AthletePortal/Events';
 import Messages from './pages/AthletePortal/Messages';
 import Funding from './pages/AthletePortal/Funding';
+import Onboarding from './pages/AthletePortal/Onboarding';
 import SettingsPage from './pages/AthletePortal/Settings';
 
 // Coach Portal Imports
@@ -120,6 +121,10 @@ function App() {
                   {/* Notification Center - Requires authentication */}
                   <Route path="/notifications" element={<NotificationCenter />} />
 
+                  {/* Athlete onboarding: standalone page (like signup), no portal layout */}
+                  <Route element={<RoleProtectedRoute allowedRoles="athlete" />}>
+                    <Route path="/athlete/onboarding" element={<Onboarding />} />
+                  </Route>
                   {/* Athlete Portal Nested Routes - Protected */}
                   <Route element={<RoleProtectedRoute allowedRoles="athlete" />}>
                     <Route path="/athlete" element={<AthleteLayout />}>

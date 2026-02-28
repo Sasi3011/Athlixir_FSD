@@ -7,6 +7,7 @@ import {
     CheckCircle2, ChevronRight
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useAthlete } from "../../context/AthleteContext";
 import Logo from "../../components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,6 +27,8 @@ const SIDEBAR_LINKS = [
 
 const AthleteLayout = () => {
     const { user, logout } = useAuth();
+    const { useAthleteProfile } = useAthlete();
+    const { profile, loading: profileLoading } = useAthleteProfile(user?.uid);
     const location = useLocation();
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -33,6 +36,20 @@ const AthleteLayout = () => {
 
     // Get user role/data from localStorage or auth
     const userRole = user ? localStorage.getItem(`role_${user.uid}`) || 'athlete' : 'athlete';
+
+    // Redirect: incomplete onboarding -> onboarding; completed onboarding on onboarding page -> dashboard
+    useEffect(() => {
+        if (!user || profileLoading) return;
+        const path = location.pathname;
+        const onOnboarding = path === "/athlete/onboarding";
+        if (!onOnboarding && (!profile || !profile.onboardingComplete)) {
+            navigate("/athlete/onboarding", { replace: true });
+            return;
+        }
+        if (onOnboarding && profile?.onboardingComplete) {
+            navigate("/athlete/dashboard", { replace: true });
+        }
+    }, [user, profile, profileLoading, location.pathname, navigate]);
 
     const handleLogout = async () => {
         try {
@@ -126,7 +143,7 @@ const AthleteLayout = () => {
                         <div className="flex items-center gap-3 pl-4 border-l border-white/10">
                             <div className="text-right hidden sm:block">
                                 <p className="text-xs font-black uppercase tracking-wider text-white leading-tight">
-                                    {user?.displayName || "Athlete ID"}
+                                    {profile?.permanentAthleteId || user?.displayName || "Athlete"}
                                 </p>
                                 <div className="flex items-center justify-end gap-1 mt-0.5">
                                     <CheckCircle2 size={10} className="text-primary" />
