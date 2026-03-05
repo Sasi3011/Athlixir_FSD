@@ -1,307 +1,515 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Activity, Calendar, Clock, BarChart3,
-    Save, Trash2, Edit3, Plus, Filter, Info,
-    ChevronRight, CheckCircle2, TrendingUp
+    Plus, Calendar, Clock, Save, X, Filter, Trash2, Pencil, Eye,
+    BarChart3, TrendingUp, Upload, Sparkles, Target, Activity
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useAthlete } from "../../context/AthleteContext";
 import {
-    ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
-    Tooltip, Cell, CartesianGrid
-} from 'recharts';
+    ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid,
+    Tooltip, BarChart, Bar, Cell
+} from "recharts";
+
+const ACTIVITY_TYPES = ["Match", "Practice", "Gym", "Trial"];
+const RESULT_OPTIONS = ["Win", "Loss", "Draw"];
+
+const getDefaultForm = () => ({
+    date: new Date().toISOString().split("T")[0],
+    activityType: "Practice",
+    eventName: "",
+    opponent: "",
+    duration: "",
+    // Cricket
+    runs: "", ballsFaced: "", wickets: "", oversBowled: "", economyRate: "",
+    // Football
+    goals: "", assists: "", passAccuracy: "", minutesPlayed: "", yellowCards: "", redCards: "",
+    // Athletics / Generic
+    eventType: "", time: "", position: "", personalBest: "No",
+    // Physical & fitness
+    weight: "", fatigueLevel: "", sleepHours: "", painLevel: "", heartRate: "", rpe: "",
+    // Result
+    result: "", positionAchieved: "", coachRating: "", selfRating: "", notes: "",
+    // Uploads (store as file names or URLs)
+    screenshotFile: "", scorecardFile: "", videoLink: ""
+});
+
+function calculatePerformanceScore(log) {
+    const coach = Number(log.coachRating) || 0;
+    const self = Number(log.selfRating) || 0;
+    const fatigue = Number(log.fatigueLevel) || 0;
+    const winBonus = log.result === "Win" ? 10 : log.result === "Draw" ? 5 : 0;
+    let score = (coach + self) * 5 - fatigue * 2 + winBonus;
+    if (log.result === "Loss") score = Math.max(0, score - 15);
+    score = Math.max(0, Math.min(100, Math.round(score)));
+    return score;
+}
+
+function getScoreBand(score) {
+    if (score >= 80) return { label: "Excellent", color: "text-emerald-500", bg: "bg-emerald-500/10" };
+    if (score >= 50) return { label: "Good", color: "text-amber-500", bg: "bg-amber-500/10" };
+    return { label: "Needs Improvement", color: "text-red-500", bg: "bg-red-500/10" };
+}
+
+function getKeyStat(log, sport) {
+    if (sport === "Cricket") return log.runs ? `${log.runs} runs` : "—";
+    if (sport === "Football") return log.goals != null ? `${log.goals}G ${log.assists || 0}A` : "—";
+    if (sport === "Athletics" || log.eventType) return log.time ? `${log.time}` : (log.position ? `#${log.position}` : "—");
+    return log.notes?.slice(0, 20) || "—";
+}
+
+const inputClass = "w-full bg-white/[0.06] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:border-primary/50";
+const labelClass = "block text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5";
 
 const PerformanceLog = () => {
     const { user } = useAuth();
+    const { useAthleteProfile } = useAthlete();
+    const { profile } = useAthleteProfile(user?.uid);
+    const primarySport = profile?.primarySport || "Athletics";
+
     const [logs, setLogs] = useState([]);
-    const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({
-        activityType: "Training",
-        date: new Date().toISOString().split('T')[0],
-        duration: "",
-        intensity: "Medium",
-        level: "College",
-        notes: ""
-    });
+    const [showModal, setShowModal] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [viewingId, setViewingId] = useState(null);
+    const [form, setForm] = useState(getDefaultForm());
+
+    const [filterDateFrom, setFilterDateFrom] = useState("");
+    const [filterDateTo, setFilterDateTo] = useState("");
+    const [filterType, setFilterType] = useState("");
+    const [filterMonth, setFilterMonth] = useState("");
 
     useEffect(() => {
-        const storedLogs = JSON.parse(localStorage.getItem(`perf_logs_${user?.uid}`) || "[]");
-        setLogs(storedLogs.sort((a, b) => new Date(b.date) - new Date(a.date)));
+        const stored = JSON.parse(localStorage.getItem(`perf_logs_${user?.uid}`) || "[]");
+        setLogs(stored.sort((a, b) => new Date(b.date) - new Date(a.date)));
     }, [user]);
+
+    const filteredLogs = useMemo(() => {
+        let list = [...logs];
+        if (filterDateFrom) list = list.filter(l => l.date >= filterDateFrom);
+        if (filterDateTo) list = list.filter(l => l.date <= filterDateTo);
+        if (filterType) list = list.filter(l => l.activityType === filterType);
+        if (filterMonth) {
+            const [y, m] = filterMonth.split("-").map(Number);
+            list = list.filter(l => {
+                const d = new Date(l.date);
+                return d.getFullYear() === y && d.getMonth() + 1 === m;
+            });
+        }
+        return list;
+    }, [logs, filterDateFrom, filterDateTo, filterType, filterMonth]);
+
+    const openNew = () => {
+        setEditingId(null);
+        setViewingId(null);
+        setForm(getDefaultForm());
+        setShowModal(true);
+    };
+
+    const openEdit = (log) => {
+        setEditingId(log.id);
+        setViewingId(null);
+        setForm({ ...getDefaultForm(), ...log });
+        setShowModal(true);
+    };
+
+    const openView = (log) => {
+        setViewingId(log.id);
+        setEditingId(null);
+        setForm({ ...getDefaultForm(), ...log });
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditingId(null);
+        setViewingId(null);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const newLog = {
-            ...formData,
-            id: Date.now(),
-            syncStatus: "Synced"
-        };
-        const updatedLogs = [newLog, ...logs];
-        setLogs(updatedLogs);
-        localStorage.setItem(`perf_logs_${user?.uid}`, JSON.stringify(updatedLogs));
-        setShowForm(false);
-        setFormData({
-            activityType: "Training",
-            date: new Date().toISOString().split('T')[0],
-            duration: "",
-            intensity: "Medium",
-            level: "College",
-            notes: ""
-        });
+        const score = calculatePerformanceScore(form);
+        const entry = { ...form, performanceScore: score, id: editingId || Date.now() };
+        let next;
+        if (editingId) {
+            next = logs.map(l => l.id === editingId ? entry : l);
+        } else {
+            next = [entry, ...logs];
+        }
+        setLogs(next.sort((a, b) => new Date(b.date) - new Date(a.date)));
+        localStorage.setItem(`perf_logs_${user?.uid}`, JSON.stringify(next));
+        closeModal();
     };
 
     const deleteLog = (id) => {
-        const updatedLogs = logs.filter(log => log.id !== id);
-        setLogs(updatedLogs);
-        localStorage.setItem(`perf_logs_${user?.uid}`, JSON.stringify(updatedLogs));
+        const next = logs.filter(l => l.id !== id);
+        setLogs(next);
+        localStorage.setItem(`perf_logs_${user?.uid}`, JSON.stringify(next));
     };
 
-    const getIntensityColor = (intensity) => {
-        switch (intensity) {
-            case 'High': return 'text-red-500 bg-red-500/10 border-red-500/20';
-            case 'Medium': return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
-            default: return 'text-green-500 bg-green-500/10 border-green-500/20';
-        }
-    };
+    const isViewOnly = !!viewingId;
+    const isCricket = primarySport === "Cricket";
+    const isFootball = primarySport === "Football";
+    const isAthletics = primarySport === "Athletics" || !isCricket && !isFootball;
 
-    // Calculate chart data from logs
-    const chartData = logs.slice(0, 7).reverse().map(log => ({
-        name: log.date.split('-').slice(1).join('/'),
-        duration: parseInt(log.duration) || 0
+    const last5ForChart = filteredLogs.slice(0, 5).reverse().map(l => ({
+        label: l.date?.slice(5) || "",
+        score: l.performanceScore ?? calculatePerformanceScore(l),
+        fatigue: Number(l.fatigueLevel) || 0
     }));
 
+    const monthlyData = useMemo(() => {
+        const byMonth = {};
+        filteredLogs.forEach(l => {
+            const key = l.date?.slice(0, 7) || "—";
+            if (!byMonth[key]) byMonth[key] = { month: key, avg: 0, count: 0, total: 0 };
+            byMonth[key].total += l.performanceScore ?? calculatePerformanceScore(l);
+            byMonth[key].count += 1;
+        });
+        return Object.values(byMonth).map(m => ({ ...m, avg: Math.round(m.total / m.count) })).sort((a, b) => a.month.localeCompare(b.month)).slice(-6);
+    }, [filteredLogs]);
+
     return (
-        <div className="space-y-10 pb-20">
-            {/* Header / Summary Graph */}
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-2 bg-black/40 border border-white/5 rounded-[2.5rem] p-10 min-w-0">
-                    <div className="flex justify-between items-center mb-10">
-                        <div>
-                            <h2 className="text-2xl font-black uppercase tracking-tight text-white mb-1">Session Dynamics</h2>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Duration analysis of recent activities</p>
-                        </div>
-                        <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-                            <BarChart3 size={24} />
-                        </div>
-                    </div>
+        <div className="space-y-8 pb-12 max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h1 className="text-xl font-bold text-white/95">Performance Log</h1>
+                <button
+                    type="button"
+                    onClick={openNew}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
+                    <Plus size={18} />
+                    Log Performance
+                </button>
+            </div>
 
-                    <div className="h-[240px] w-full relative">
-                        {logs.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#6b7280', fontSize: 10, fontWeight: 700 }}
-                                        dy={10}
-                                    />
-                                    <YAxis hide />
-                                    <Tooltip
-                                        cursor={{ fill: '#ffffff05' }}
-                                        contentStyle={{ backgroundColor: '#050505', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '10px' }}
-                                    />
-                                    <Bar dataKey="duration" radius={[6, 6, 0, 0]}>
-                                        {chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#ff5722' : '#ffffff20'} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-white/5 rounded-3xl">
-                                <Activity size={40} className="mb-4 opacity-10" />
-                                <p className="text-xs font-black uppercase tracking-widest">No Log Data Available</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="bg-primary border border-primary/50 p-10 rounded-[2.5rem] text-white shadow-2xl shadow-primary/20 flex flex-col h-full">
-                    <TrendingUp size={40} className="mb-6" />
-                    <h3 className="text-xl font-black uppercase tracking-tight mb-4">Optimization Engine</h3>
-                    <p className="text-xs font-bold leading-relaxed mb-10 opacity-90 uppercase tracking-widest">
-                        Data from your logs is synced directly with scout feeds. Keep your intensity consistent for higher ecosystem ranking.
-                    </p>
-                    <button
-                        onClick={() => setShowForm(!showForm)}
-                        className="mt-auto w-full py-4 bg-white text-primary font-black rounded-2xl text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                    >
-                        {showForm ? <Trash2 size={16} /> : <Plus size={16} />}
-                        {showForm ? "Cancel Log" : "Add Session"}
-                    </button>
-                </div>
-            </section>
-
-            {/* Performance Form Overlay/Section */}
+            {/* Modal: Add / Edit / View */}
             <AnimatePresence>
-                {showForm && (
-                    <motion.section
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="bg-black/80 backdrop-blur-3xl border-2 border-primary/30 p-10 rounded-[3rem] shadow-2xl"
+                {showModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto bg-black/70 backdrop-blur-sm"
+                        onClick={closeModal}
                     >
-                        <div className="flex items-center gap-4 mb-10">
-                            <div className="p-4 bg-primary text-white rounded-2xl shadow-lg">
-                                <Calendar size={28} />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black uppercase tracking-tight text-white italic">Log New Session</h2>
-                                <p className="text-[10px] text-primary font-black uppercase tracking-[.3em]">Identity ID: ATH-LOG-2024</p>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Activity Type</label>
-                                <select
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white uppercase font-bold outline-none focus:border-primary/50 transition-all text-sm"
-                                    value={formData.activityType}
-                                    onChange={(e) => setFormData({ ...formData, activityType: e.target.value })}
-                                >
-                                    <option className="bg-[#050505]">Training</option>
-                                    <option className="bg-[#050505]">Match</option>
-                                    <option className="bg-[#050505]">Recovery Session</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Date</label>
-                                <input
-                                    type="date"
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white uppercase font-bold outline-none focus:border-primary/50 transition-all text-sm"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    required
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Duration (Mins)</label>
-                                <div className="relative group">
-                                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary" size={18} />
-                                    <input
-                                        type="number"
-                                        placeholder="90"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white font-bold outline-none focus:border-primary/50 transition-all text-sm"
-                                        value={formData.duration}
-                                        onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Intensity Level</label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {['Low', 'Medium', 'High'].map((l) => (
-                                        <button
-                                            key={l}
-                                            type="button"
-                                            onClick={() => setFormData({ ...formData, intensity: l })}
-                                            className={`py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.intensity === l
-                                                ? "bg-primary border-primary text-white"
-                                                : "bg-white/5 border-white/10 text-gray-500 hover:border-white/20"
-                                                }`}
-                                        >
-                                            {l}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Notes / Highlights</label>
-                                <input
-                                    type="text"
-                                    placeholder="Briefly describe your performance details..."
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-medium outline-none focus:border-primary/50 transition-all text-sm"
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="md:col-span-3 pt-4">
-                                <button type="submit" className="w-full py-5 bg-primary text-white font-black rounded-[1.5rem] uppercase tracking-[.3em] shadow-2xl shadow-primary/30 hover:bg-orange-600 hover:scale-[1.01] transition-all flex items-center justify-center gap-3">
-                                    <Save size={20} /> Synchronize Log
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full max-w-2xl rounded-2xl bg-[#0f0f0f] border border-white/10 shadow-xl my-8"
+                        >
+                            <div className="flex items-center justify-between p-5 border-b border-white/10">
+                                <h2 className="text-lg font-semibold text-white">
+                                    {viewingId ? "View Entry" : editingId ? "Edit Entry" : "Log Performance"}
+                                </h2>
+                                <button type="button" onClick={closeModal} className="p-2 text-gray-500 hover:text-white rounded-lg">
+                                    <X size={18} />
                                 </button>
                             </div>
-                        </form>
-                    </motion.section>
+
+                            <form onSubmit={handleSubmit} className="p-5 space-y-6 max-h-[70vh] overflow-y-auto">
+                                {/* Basic Info */}
+                                <section>
+                                    <h3 className={labelClass}>Basic info</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className={labelClass}>Date</label>
+                                            <input type="date" className={inputClass} value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required readOnly={isViewOnly} />
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Type</label>
+                                            <select className={inputClass} value={form.activityType} onChange={e => setForm(f => ({ ...f, activityType: e.target.value }))} disabled={isViewOnly}>
+                                                {ACTIVITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className={labelClass}>Event / Tournament name</label>
+                                            <input type="text" className={inputClass} value={form.eventName} onChange={e => setForm(f => ({ ...f, eventName: e.target.value }))} placeholder="Optional" readOnly={isViewOnly} />
+                                        </div>
+                                        {form.activityType === "Match" && (
+                                            <div className="col-span-2">
+                                                <label className={labelClass}>Opponent</label>
+                                                <input type="text" className={inputClass} value={form.opponent} onChange={e => setForm(f => ({ ...f, opponent: e.target.value }))} readOnly={isViewOnly} />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <label className={labelClass}>Duration (min)</label>
+                                            <input type="number" className={inputClass} value={form.duration} onChange={e => setForm(f => ({ ...f, duration: e.target.value }))} placeholder="90" required readOnly={isViewOnly} />
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* Sport-specific */}
+                                <section>
+                                    <h3 className={labelClass}>Sport-specific stats ({primarySport})</h3>
+                                    {isCricket && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            <div><label className={labelClass}>Runs</label><input type="number" className={inputClass} value={form.runs} onChange={e => setForm(f => ({ ...f, runs: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Balls faced</label><input type="number" className={inputClass} value={form.ballsFaced} onChange={e => setForm(f => ({ ...f, ballsFaced: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Strike rate</label><input type="text" className={inputClass} value={form.ballsFaced && form.runs ? ((Number(form.runs) / Number(form.ballsFaced)) * 100).toFixed(1) : ""} placeholder="Auto" readOnly /></div>
+                                            <div><label className={labelClass}>Wickets</label><input type="number" className={inputClass} value={form.wickets} onChange={e => setForm(f => ({ ...f, wickets: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Overs bowled</label><input type="text" className={inputClass} value={form.oversBowled} onChange={e => setForm(f => ({ ...f, oversBowled: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Economy rate</label><input type="text" className={inputClass} value={form.economyRate} onChange={e => setForm(f => ({ ...f, economyRate: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        </div>
+                                    )}
+                                    {isFootball && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            <div><label className={labelClass}>Goals</label><input type="number" className={inputClass} value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Assists</label><input type="number" className={inputClass} value={form.assists} onChange={e => setForm(f => ({ ...f, assists: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Pass accuracy %</label><input type="number" className={inputClass} value={form.passAccuracy} onChange={e => setForm(f => ({ ...f, passAccuracy: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Minutes played</label><input type="number" className={inputClass} value={form.minutesPlayed} onChange={e => setForm(f => ({ ...f, minutesPlayed: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Yellow cards</label><input type="number" className={inputClass} value={form.yellowCards} onChange={e => setForm(f => ({ ...f, yellowCards: e.target.value }))} readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Red cards</label><input type="number" className={inputClass} value={form.redCards} onChange={e => setForm(f => ({ ...f, redCards: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        </div>
+                                    )}
+                                    {(isAthletics || (!isCricket && !isFootball)) && (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className={labelClass}>Event type</label><input type="text" className={inputClass} value={form.eventType} onChange={e => setForm(f => ({ ...f, eventType: e.target.value }))} placeholder="e.g. 100m, 200m" readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Time / Score</label><input type="text" className={inputClass} value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} placeholder="e.g. 10.9s" readOnly={isViewOnly} /></div>
+                                            <div><label className={labelClass}>Position</label><input type="text" className={inputClass} value={form.position} onChange={e => setForm(f => ({ ...f, position: e.target.value }))} placeholder="1st, 2nd…" readOnly={isViewOnly} /></div>
+                                            <div>
+                                                <label className={labelClass}>Personal best?</label>
+                                                <select className={inputClass} value={form.personalBest} onChange={e => setForm(f => ({ ...f, personalBest: e.target.value }))} disabled={isViewOnly}>
+                                                    <option value="Yes">Yes</option><option value="No">No</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+                                </section>
+
+                                {/* Physical & fitness */}
+                                <section>
+                                    <h3 className={labelClass}>Physical & fitness (for ML)</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                        <div><label className={labelClass}>Weight (kg)</label><input type="number" className={inputClass} value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} placeholder="Optional" readOnly={isViewOnly} /></div>
+                                        <div><label className={labelClass}>Fatigue (1–10)</label><input type="number" min={1} max={10} className={inputClass} value={form.fatigueLevel} onChange={e => setForm(f => ({ ...f, fatigueLevel: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        <div><label className={labelClass}>Sleep (hours)</label><input type="number" step={0.5} className={inputClass} value={form.sleepHours} onChange={e => setForm(f => ({ ...f, sleepHours: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        <div><label className={labelClass}>Pain (0–10)</label><input type="number" min={0} max={10} className={inputClass} value={form.painLevel} onChange={e => setForm(f => ({ ...f, painLevel: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        <div><label className={labelClass}>Heart rate</label><input type="number" className={inputClass} value={form.heartRate} onChange={e => setForm(f => ({ ...f, heartRate: e.target.value }))} placeholder="Optional" readOnly={isViewOnly} /></div>
+                                        <div><label className={labelClass}>RPE</label><input type="number" className={inputClass} value={form.rpe} onChange={e => setForm(f => ({ ...f, rpe: e.target.value }))} placeholder="Rate of exertion" readOnly={isViewOnly} /></div>
+                                    </div>
+                                </section>
+
+                                {/* Result summary */}
+                                <section>
+                                    <h3 className={labelClass}>Result summary</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className={labelClass}>Result</label>
+                                            <select className={inputClass} value={form.result} onChange={e => setForm(f => ({ ...f, result: e.target.value }))} disabled={isViewOnly}>
+                                                <option value="">—</option>
+                                                {RESULT_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                                            </select>
+                                        </div>
+                                        <div><label className={labelClass}>Position achieved</label><input type="text" className={inputClass} value={form.positionAchieved} onChange={e => setForm(f => ({ ...f, positionAchieved: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        <div><label className={labelClass}>Coach rating (1–10)</label><input type="number" min={1} max={10} className={inputClass} value={form.coachRating} onChange={e => setForm(f => ({ ...f, coachRating: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        <div><label className={labelClass}>Self rating (1–10)</label><input type="number" min={1} max={10} className={inputClass} value={form.selfRating} onChange={e => setForm(f => ({ ...f, selfRating: e.target.value }))} readOnly={isViewOnly} /></div>
+                                        <div className="col-span-2">
+                                            <label className={labelClass}>Notes</label>
+                                            <textarea className={inputClass + " min-h-[80px]"} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} readOnly={isViewOnly} />
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* Uploads */}
+                                <section>
+                                    <h3 className={labelClass}>Uploads</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className={labelClass}>Match screenshot</label>
+                                            {isViewOnly ? (
+                                                <p className="text-sm text-white/80 py-2">{form.screenshotFile || "—"}</p>
+                                            ) : (
+                                                <>
+                                                    <input type="file" className={inputClass} onChange={e => setForm(f => ({ ...f, screenshotFile: e.target.files?.[0]?.name || "" }))} />
+                                                    {form.screenshotFile && <p className="text-xs text-gray-500 mt-1 truncate">{form.screenshotFile}</p>}
+                                                </>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Scorecard</label>
+                                            {isViewOnly ? (
+                                                <p className="text-sm text-white/80 py-2">{form.scorecardFile || "—"}</p>
+                                            ) : (
+                                                <>
+                                                    <input type="file" className={inputClass} onChange={e => setForm(f => ({ ...f, scorecardFile: e.target.files?.[0]?.name || "" }))} />
+                                                    {form.scorecardFile && <p className="text-xs text-gray-500 mt-1 truncate">{form.scorecardFile}</p>}
+                                                </>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Video link</label>
+                                            <input type="url" className={inputClass} value={form.videoLink} onChange={e => setForm(f => ({ ...f, videoLink: e.target.value }))} placeholder="URL" readOnly={isViewOnly} />
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {!isViewOnly && (
+                                    <div className="flex gap-3 pt-2">
+                                        <button type="button" onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-white/15 text-white/90 text-sm font-medium">Cancel</button>
+                                        <button type="submit" className="flex-1 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold flex items-center justify-center gap-2">
+                                            <Save size={16} />
+                                            {editingId ? "Update" : "Save"} Entry
+                                        </button>
+                                    </div>
+                                )}
+                            </form>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Performance History Table */}
-            <section className="bg-black/40 border border-white/5 rounded-[2.5rem] overflow-hidden">
-                <div className="p-10 flex justify-between items-center border-b border-white/5">
-                    <h2 className="text-xl font-black uppercase tracking-tight text-white">Performance Chronicle</h2>
-                    <div className="flex gap-2">
-                        <button className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all"><Filter size={18} /></button>
+            {/* Performance score formula note + Graphs */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+                    <h2 className="text-sm font-semibold text-white/95 mb-4 flex items-center gap-2">
+                        <TrendingUp size={16} /> Performance trend (last 5)
+                    </h2>
+                    <div className="h-44">
+                        {last5ForChart.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={last5ForChart}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                    <XAxis dataKey="label" tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} />
+                                    <YAxis domain={[0, 100]} tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+                                    <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }} />
+                                    <Line type="monotone" dataKey="score" stroke="#f97316" strokeWidth={2} dot={{ fill: "#f97316", r: 4 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-gray-500 text-sm">No data yet</div>
+                        )}
                     </div>
                 </div>
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+                    <h2 className="text-sm font-semibold text-white/95 mb-4 flex items-center gap-2">
+                        <Activity size={16} /> Fatigue vs performance
+                    </h2>
+                    <div className="h-44">
+                        {last5ForChart.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={last5ForChart}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                    <XAxis dataKey="label" tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} />
+                                    <YAxis yAxisId="left" dataKey="score" hide />
+                                    <YAxis yAxisId="right" dataKey="fatigue" orientation="right" domain={[0, 10]} tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+                                    <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }} />
+                                    <Line yAxisId="left" type="monotone" dataKey="score" stroke="#f97316" strokeWidth={2} dot={{ r: 4 }} name="Score" />
+                                    <Line yAxisId="right" type="monotone" dataKey="fatigue" stroke="#a78bfa" strokeWidth={2} dot={{ r: 4 }} name="Fatigue" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-gray-500 text-sm">No data yet</div>
+                        )}
+                    </div>
+                </div>
+            </section>
 
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+                <h2 className="text-sm font-semibold text-white/95 mb-4 flex items-center gap-2">
+                    <BarChart3 size={16} /> Monthly improvement
+                </h2>
+                <div className="h-44">
+                    {monthlyData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={monthlyData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 100]} tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+                                <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }} />
+                                <Bar dataKey="avg" fill="#f97316" radius={[4, 4, 0, 0]}>
+                                    {monthlyData.map((_, i) => (
+                                        <Cell key={i} fill={i === monthlyData.length - 1 ? "#f97316" : "rgba(249,115,22,0.5)"} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-full flex items-center justify-center text-gray-500 text-sm">No data yet</div>
+                    )}
+                </div>
+            </div>
+
+            {/* AI Insights */}
+            <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+                <h2 className="text-sm font-semibold text-white/95 mb-4 flex items-center gap-2">
+                    <Sparkles size={16} className="text-primary" /> AI Insights
+                </h2>
+                <ul className="space-y-3 text-sm text-gray-300">
+                    <li className="flex items-start gap-2">
+                        <Target size={14} className="shrink-0 mt-0.5 text-primary" />
+                        Your sprint speed improved 4% compared to last month.
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <Activity size={14} className="shrink-0 mt-0.5 text-amber-500" />
+                        High fatigue levels detected in last 3 sessions.
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <TrendingUp size={14} className="shrink-0 mt-0.5 text-emerald-500" />
+                        Risk of hamstring injury currently low; maintain recovery habits.
+                    </li>
+                </ul>
+            </section>
+
+            {/* History table + filters */}
+            <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+                <div className="p-5 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h2 className="text-sm font-semibold text-white/95">Performance history</h2>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <input type="date" className={inputClass + " w-36"} value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} placeholder="From" />
+                        <input type="date" className={inputClass + " w-36"} value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} placeholder="To" />
+                        <select className={inputClass + " w-32"} value={filterType} onChange={e => setFilterType(e.target.value)}>
+                            <option value="">All types</option>
+                            {ACTIVITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <input type="month" className={inputClass + " w-36"} value={filterMonth} onChange={e => setFilterMonth(e.target.value)} />
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Filter size={12} /> Filters
+                        </span>
+                    </div>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-white/[0.02]">
-                                <th className="px-10 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Date / Time</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Activity</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Duration</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Intensity</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Level</th>
-                                <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">Cloud Sync</th>
-                                <th className="px-10 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right">Actions</th>
+                                <th className="px-4 py-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th className="px-4 py-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th className="px-4 py-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider">Key stat</th>
+                                <th className="px-4 py-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                                <th className="px-4 py-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                <th className="px-4 py-3 text-[10px] font-medium text-gray-500 uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {logs.map((log) => (
-                                <tr key={log.id} className="group hover:bg-white/[0.03] transition-colors">
-                                    <td className="px-10 py-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-primary/40 group-hover:bg-primary transition-colors"></div>
-                                            <span className="text-xs font-bold text-white uppercase">{log.date}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6 font-black uppercase text-xs text-white italic">{log.activityType}</td>
-                                    <td className="px-6 py-6">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-gray-300">{log.duration}</span>
-                                            <span className="text-[9px] font-bold text-gray-600 uppercase">Mins</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6">
-                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${getIntensityColor(log.intensity)}`}>
-                                            {log.intensity}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-6 text-[10px] font-black text-gray-500 uppercase tracking-wider">{log.level}</td>
-                                    <td className="px-6 py-6">
-                                        <div className="flex items-center justify-center">
-                                            <CheckCircle2 size={16} className="text-green-500" />
-                                        </div>
-                                    </td>
-                                    <td className="px-10 py-6 text-right">
-                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                            <button className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"><Edit3 size={14} /></button>
-                                            <button
-                                                onClick={() => deleteLog(log.id)}
-                                                className="p-2 bg-red-500/5 hover:bg-red-500/20 rounded-lg text-red-500/60 hover:text-red-500 transition-all"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {logs.length === 0 && (
+                        <tbody className="divide-y divide-white/[0.04]">
+                            {filteredLogs.map((log) => {
+                                const score = log.performanceScore ?? calculatePerformanceScore(log);
+                                const band = getScoreBand(score);
+                                return (
+                                    <tr key={log.id} className="hover:bg-white/[0.02]">
+                                        <td className="px-4 py-3 text-sm text-white/90">{log.date}</td>
+                                        <td className="px-4 py-3 text-sm text-white/80">{log.activityType}</td>
+                                        <td className="px-4 py-3 text-sm text-white/80">{getKeyStat(log, primarySport)}</td>
+                                        <td className="px-4 py-3 text-sm text-white/80">{log.result || "—"}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium ${band.bg} ${band.color}`}>
+                                                {score} – {band.label}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button type="button" onClick={() => openView(log)} className="p-2 text-gray-500 hover:text-white rounded-lg" title="View"><Eye size={14} /></button>
+                                                <button type="button" onClick={() => openEdit(log)} className="p-2 text-gray-500 hover:text-white rounded-lg" title="Edit"><Pencil size={14} /></button>
+                                                <button type="button" onClick={() => deleteLog(log.id)} className="p-2 text-gray-500 hover:text-red-400 rounded-lg" title="Delete"><Trash2 size={14} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {filteredLogs.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="px-10 py-20 text-center">
-                                        <div className="flex flex-col items-center">
-                                            <BarChart3 className="text-gray-700 mb-4" size={48} />
-                                            <p className="text-sm font-black text-gray-500 uppercase tracking-widest">No Chronicle History Detected</p>
-                                        </div>
+                                    <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
+                                        No entries yet. Click “Log Performance” to add one.
                                     </td>
                                 </tr>
                             )}

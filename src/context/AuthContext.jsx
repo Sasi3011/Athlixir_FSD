@@ -1,6 +1,13 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { auth } from "../firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import {
+    onAuthStateChanged,
+    signOut,
+    updatePassword,
+    deleteUser,
+    EmailAuthProvider,
+    reauthenticateWithCredential
+} from "firebase/auth";
 
 // Added auto logout after tab close logic
 const AUTO_LOGOUT_KEYS = {
@@ -180,11 +187,59 @@ export const AuthProvider = ({ children }) => {
         setUserRole(null);
     };
 
+    /** Change password (email/password users only). Requires current password. */
+    const changePassword = async (currentPassword, newPassword) => {
+        if (!user || user.isAdmin) {
+            return { success: false, error: "Not signed in or admin account." };
+        }
+        if (!user.email) {
+            return { success: false, error: "No email linked to this account." };
+        }
+        try {
+            const credential = EmailAuthProvider.credential(user.email, currentPassword);
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newPassword);
+            return { success: true };
+        } catch (err) {
+            const message = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
+                ? "Current password is incorrect."
+                : err.message || "Failed to change password.";
+            return { success: false, error: message };
+        }
+    };
+
+    /** Delete account (email/password users). Requires current password for reauth. */
+    const deleteAccount = async (password) => {
+        if (!user || user.isAdmin) {
+            return { success: false, error: "Cannot delete admin account." };
+        }
+        if (!user.email) {
+            return { success: false, error: "No email linked to this account." };
+        }
+        try {
+            const credential = EmailAuthProvider.credential(user.email, password);
+            await reauthenticateWithCredential(user, credential);
+            await deleteUser(user);
+            clearAuthStorageForAutoLogout();
+            setUser(null);
+            setCurrentUser(null);
+            setUserRole(null);
+            return { success: true };
+        } catch (err) {
+            const message = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
+                ? "Password is incorrect."
+                : err.message || "Failed to delete account.";
+            return { success: false, error: message };
+        }
+    };
+
     const value = {
         user,
         currentUser,
         userRole,
         logout,
+        changePassword,
+        deleteAccount,
         loading
     };
 

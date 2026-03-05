@@ -1,292 +1,283 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-    Activity, Trophy, Calendar, Flame, ChevronRight,
-    LogIn, Plus, TrendingUp, Info, MapPin
+    Trophy, Calendar, Activity, Award, TrendingUp, AlertTriangle,
+    ChevronRight, MapPin, Pencil, Upload, BarChart3,
+    Plus, ClipboardList, FileCheck, Sparkles
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useAthlete } from "../../context/AthleteContext";
-import {
-    ResponsiveContainer, LineChart, Line, XAxis, YAxis,
-    CartesianGrid, Tooltip, AreaChart, Area
-} from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+
+const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
+    return "Good Evening";
+};
+
+const getProfileCompletion = (profile, user) => {
+    const fields = [
+        profile?.name || user?.displayName,
+        profile?.primarySport,
+        profile?.dateOfBirth,
+        profile?.gender,
+        profile?.state,
+        profile?.district,
+        profile?.height,
+        profile?.weight,
+        profile?.currentLevel,
+        profile?.currentAcademy
+    ];
+    const filled = fields.filter(Boolean).length;
+    return Math.min(100, Math.round((filled / fields.length) * 100));
+};
+
+const MOCK_UPCOMING_EVENTS = [
+    { id: 1, name: "State Shooting Championship", date: "Mar 15, 2025", location: "Chennai", status: "Registered" },
+    { id: 2, name: "District Rifle Qualifiers", date: "Mar 22, 2025", location: "Coimbatore", status: "Open" },
+    { id: 3, name: "National Junior Trials", date: "Apr 5, 2025", location: "Pune", status: "Open" }
+];
+
+const MOCK_ACTIVITY = [
+    { type: "achievement", text: "Added new achievement", sub: "State Championship - 2nd place", time: "2 days ago", icon: Award },
+    { type: "event", text: "Registered for event", sub: "District Rifle Qualifiers", time: "1 week ago", icon: Calendar },
+    { type: "profile", text: "Updated profile", sub: "Sport & location", time: "1 week ago", icon: Pencil },
+];
+
+const MOCK_LAST_5_PERFORMANCES = [
+    { label: "Week 1", value: 72 },
+    { label: "Week 2", value: 78 },
+    { label: "Week 3", value: 75 },
+    { label: "Week 4", value: 82 },
+    { label: "Week 5", value: 85 }
+];
+
+const QUICK_ACTIONS = [
+    { label: "Add Achievement", icon: Plus, href: "/athlete/profile", color: "text-primary" },
+    { label: "Register for Event", icon: ClipboardList, href: "/athlete/events", color: "text-blue-500" },
+    { label: "Upload Certificate", icon: Upload, href: "/athlete/profile", color: "text-amber-500" },
+    { label: "Update Profile", icon: Pencil, href: "/athlete/profile", color: "text-emerald-500" },
+    { label: "View Full Analytics", icon: BarChart3, href: "/athlete/performance", color: "text-purple-500" }
+];
+
+const cardClass = "rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 transition-colors hover:border-white/10";
+const sectionTitleClass = "text-sm font-semibold text-white/95 mb-4";
 
 const Dashboard = () => {
     const { user } = useAuth();
     const { useAthleteProfile } = useAthlete();
     const { profile } = useAthleteProfile(user?.uid);
-    const displayName = profile?.name || user?.displayName || "Athlete";
-    const locationText = [profile?.district, profile?.state].filter(Boolean).join(", ") || "—";
-    const [performanceData, setPerformanceData] = useState([]);
-    const [stats, setStats] = useState({
-        trainingSessions: 42,
-        injuryStatus: "Recovering",
-        rank: "#12",
-        upcomingEvent: "State Qualifiers"
-    });
 
-    // Mock data for the graph
-    const chartData = [
-        { name: 'Mon', duration: 120, intensity: 8 },
-        { name: 'Tue', duration: 90, intensity: 7 },
-        { name: 'Wed', duration: 150, intensity: 9 },
-        { name: 'Thu', duration: 60, intensity: 5 },
-        { name: 'Fri', duration: 180, intensity: 8 },
-        { name: 'Sat', duration: 200, intensity: 9 },
-        { name: 'Sun', duration: 0, intensity: 0 },
-    ];
-
-    useEffect(() => {
-        // Load performance history from local storage
-        const logs = JSON.parse(localStorage.getItem(`perf_logs_${user?.uid}`) || "[]");
-        setPerformanceData(logs);
-
-        if (logs.length > 0) {
-            setStats(prev => ({
-                ...prev,
-                trainingSessions: logs.length
-            }));
-        }
-    }, [user]);
+    const firstName = profile?.name?.split(" ")[0] || user?.displayName?.split(" ")[0] || "Athlete";
+    const completion = useMemo(() => getProfileCompletion(profile, user), [profile, user]);
+    const greeting = getGreeting();
 
     const statCards = [
-        { label: "Total Training", value: stats.trainingSessions, detail: "Sessions", icon: Activity, color: "text-blue-500", bg: "bg-blue-500/10" },
-        { label: "Injury Status", value: stats.injuryStatus, detail: "80% Recovery", icon: Flame, color: "text-orange-500", bg: "bg-orange-500/10" },
-        { label: "Current Rank", value: stats.rank, detail: "District Level", icon: Trophy, color: "text-primary", bg: "bg-primary/10" },
-        { label: "Next Event", value: "3 Days", detail: stats.upcomingEvent, icon: Calendar, color: "text-purple-500", bg: "bg-purple-500/10" },
+        { label: "Total Achievements", value: profile?.achievements?.length ?? 0, icon: Trophy, bg: "bg-amber-500/10", iconColor: "text-amber-500" },
+        { label: "Upcoming Events", value: MOCK_UPCOMING_EVENTS.filter(e => e.status === "Registered").length + 2, icon: Calendar, bg: "bg-blue-500/10", iconColor: "text-blue-500" },
+        { label: "Matches Played", value: "12", icon: Activity, bg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+        { label: "Medals Won", value: "5", icon: Award, bg: "bg-primary/10", iconColor: "text-primary" },
+        { label: "Performance Score", value: "82", icon: TrendingUp, bg: "bg-purple-500/10", iconColor: "text-purple-500" },
+        { label: "Injury Risk", value: "Low", icon: AlertTriangle, bg: "bg-green-500/10", iconColor: "text-green-500" }
     ];
 
     return (
-        <div className="space-y-8 pb-10">
-            {/* Welcome Section */}
-            <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                    <div className="relative">
-                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-orange-600 p-[2px] shadow-2xl shadow-primary/20">
-                            <div className="w-full h-full rounded-3xl bg-black flex items-center justify-center overflow-hidden border border-white/10">
-                                {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-4xl font-black text-primary">{displayName?.charAt(0) || 'A'}</span>
-                                )}
-                            </div>
-                        </div>
-                        <div className="absolute -bottom-2 -right-2 bg-primary text-white p-1.5 rounded-xl border-4 border-[#050505] shadow-lg">
-                            <Trophy size={14} />
+        <div className="space-y-8 pb-12 max-w-6xl mx-auto">
+            {/* 1. Welcome Header */}
+            <section className={`${cardClass} p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6`}>
+                <div className="flex items-center gap-5">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/80 to-orange-500/80 p-[1.5px] shrink-0">
+                        <div className="w-full h-full rounded-[14px] bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
+                            {user?.photoURL ? (
+                                <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-2xl font-bold text-primary/90">{firstName?.charAt(0) || "A"}</span>
+                            )}
                         </div>
                     </div>
                     <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-black uppercase tracking-tight text-white leading-none">
-                                Welcome, <span className="text-primary italic">{displayName?.split(' ')[0] || "Athlete"}</span>
-                            </h1>
-                            <span className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-500 text-[9px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                                Elite Identity
-                            </span>
-                        </div>
-                        <p className="text-gray-500 mt-2 font-bold uppercase text-[10px] tracking-[0.2em] flex items-center gap-1.5 flex-wrap">
-                            {profile?.primarySport && <span>Sport: {profile.primarySport}</span>}
-                            {profile?.primarySport && profile?.currentLevel && <span className="opacity-50">•</span>}
-                            {profile?.currentLevel && <span>Level: {profile.currentLevel}</span>}
-                            {(profile?.district || profile?.state) && (
-                                <>
-                                    <span className="opacity-50">•</span>
-                                    <span className="flex items-center gap-1"><MapPin size={10} /> {locationText}</span>
-                                </>
-                            )}
+                        <h1 className="text-xl font-bold text-white tracking-tight">
+                            {greeting}, {firstName}!
+                        </h1>
+                        <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                            {profile?.primarySport && <span>{profile.primarySport}</span>}
+                            {profile?.category && <span className="text-gray-500">•</span>}
+                            {profile?.category && <span>{profile.category}</span>}
                         </p>
-                    </div>
-                </div>
-
-                <div className="flex gap-3">
-                    <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2">
-                        <Plus size={16} />
-                        Log Action
-                    </button>
-                    <button className="px-6 py-3 bg-primary text-white rounded-2xl hover:bg-orange-600 shadow-xl shadow-primary/20 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 group">
-                        Enter Tournament
-                        <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
-                </div>
-            </section>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statCards.map((card, i) => (
-                    <motion.div
-                        key={card.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="bg-black/40 backdrop-blur-3xl border border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all group relative overflow-hidden"
-                    >
-                        <div className={`absolute top-0 right-0 w-24 h-24 ${card.bg} blur-[40px] -mr-12 -mt-12 rounded-full opacity-50`}></div>
-                        <div className="flex justify-between items-start mb-4 relative z-10">
-                            <div className={`p-3 rounded-2xl ${card.bg} ${card.color}`}>
-                                <card.icon size={20} />
-                            </div>
-                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Live Sync</span>
-                        </div>
-                        <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-1 relative z-10">{card.label}</h3>
-                        <div className="text-3xl font-black text-white tracking-tight relative z-10">{card.value}</div>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1 relative z-10">{card.detail}</p>
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Performance Graph */}
-                <div className="lg:col-span-2 bg-black/40 border border-white/5 rounded-[2.5rem] p-8 min-w-0">
-                    <div className="flex justify-between items-center mb-10">
-                        <div>
-                            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-1">Performance Dynamics</h2>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Weekly Training Duration vs Intensity</p>
-                        </div>
-                        <select className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none focus:border-primary">
-                            <option>Last 7 Days</option>
-                            <option>Last 30 Days</option>
-                        </select>
-                    </div>
-
-                    <div className="h-[300px] w-full relative">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData}>
-                                <defs>
-                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#ff5722" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#ff5722" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#6b7280', fontSize: 10, fontWeight: 700 }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    hide
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#050505',
-                                        borderRadius: '16px',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                                        fontSize: '10px',
-                                        fontWeight: '700',
-                                        textTransform: 'uppercase'
-                                    }}
-                                    itemStyle={{ color: '#ff5722' }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="duration"
-                                    stroke="#ff5722"
-                                    strokeWidth={4}
-                                    fillOpacity={1}
-                                    fill="url(#colorValue)"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Injury Summary Widget */}
-                <div className="bg-black/40 border border-white/5 rounded-[2.5rem] p-8 flex flex-col">
-                    <h2 className="text-xl font-black uppercase tracking-tight text-white mb-6">Medical Health</h2>
-
-                    <div className="flex-1 space-y-6">
-                        <div className="p-6 bg-white/5 rounded-3xl border border-white/5 relative overflow-hidden group">
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Active Status</span>
-                                <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Recovering</span>
-                            </div>
-                            <div className="text-sm font-bold text-white mb-2">ACL Knee Strain</div>
-                            <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: "80%" }}
-                                    transition={{ duration: 1, ease: "easeOut" }}
-                                    className="bg-primary h-full rounded-full"
-                                />
-                            </div>
-                            <div className="mt-3 flex justify-between text-[10px] font-black uppercase tracking-widest">
-                                <span className="text-gray-500">Recovery Progress</span>
-                                <span className="text-white">80%</span>
-                            </div>
-                        </div>
-
-                        <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 bg-primary/20 text-primary rounded-xl">
-                                    <TrendingUp size={16} />
-                                </div>
-                                <span className="text-xs font-black uppercase tracking-tight text-white italic underline">AI Risk Indicator</span>
-                            </div>
-                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                                Our platform AI predicts a <span className="text-green-500 font-black">low risk</span> of re-injury in the next 3 weeks based on your current intensity logs.
+                        {completion < 100 && (
+                            <p className="text-xs text-amber-500/90 mt-2">
+                                Profile {completion}% complete
                             </p>
-                        </div>
-                    </div>
-
-                    <button className="mt-8 w-full py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-                        Medical Documentation
-                        <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Quick Actions & Recent History */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                    <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest ml-2">Hyper-Speed Actions</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {[
-                            { label: "Log Data", icon: Activity },
-                            { label: "Add Injury", icon: Flame },
-                            { label: "Find Scouts", icon: Trophy },
-                        ].map((action, i) => (
-                            <button key={i} className="flex flex-col items-center justify-center p-6 bg-white/5 border border-white/5 rounded-[2rem] hover:border-primary/50 transition-all hover:bg-primary/5 group">
-                                <action.icon className="mb-3 text-gray-500 group-hover:text-primary transition-colors" size={24} />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white">{action.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-white/5 border border-white/5 p-8 rounded-[2.5rem]">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest">Ecosystem Activity</h3>
-                        <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View All</button>
-                    </div>
-                    <div className="space-y-4">
-                        {performanceData.slice(0, 3).map((log, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl">
-                                        <Activity size={16} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-black text-white uppercase">{log.activityType}</p>
-                                        <p className="text-[9px] text-gray-500 font-bold uppercase mt-0.5">{log.date} • {log.duration} Mins</p>
-                                    </div>
-                                </div>
-                                <div className="text-[9px] font-black text-green-500 bg-green-500/10 px-2 py-1 rounded-full uppercase">Synced</div>
-                            </div>
-                        ))}
-                        {performanceData.length === 0 && (
-                            <div className="text-center py-6 text-gray-500">
-                                <Info size={24} className="mx-auto mb-2 opacity-20" />
-                                <p className="text-[10px] font-black uppercase tracking-widest">No activities logged yet.</p>
-                            </div>
                         )}
                     </div>
                 </div>
-            </div>
+                <Link
+                    to="/athlete/profile"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
+                >
+                    <Pencil size={14} />
+                    Edit Profile
+                </Link>
+            </section>
+
+            {/* 2. Quick Stats Overview */}
+            <section>
+                <h2 className={sectionTitleClass}>Quick Stats</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {statCards.map((card, i) => (
+                        <motion.div
+                            key={card.label}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className={`${cardClass} flex flex-col`}
+                        >
+                            <div className={`w-9 h-9 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center mb-3`}>
+                                <card.icon size={18} />
+                            </div>
+                            <p className="text-2xl font-bold text-white tracking-tight">{card.value}</p>
+                            <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mt-0.5">{card.label}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </section>
+
+            {/* 3. Performance Summary */}
+            <section>
+                <h2 className={sectionTitleClass}>Performance Summary</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-2 gap-4 lg:col-span-1">
+                        <div className={`${cardClass}`}>
+                            <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Goals / Runs / Points</p>
+                            <p className="text-lg font-bold text-white mt-1">—</p>
+                        </div>
+                        <div className={`${cardClass}`}>
+                            <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Win–Loss Ratio</p>
+                            <p className="text-lg font-bold text-white mt-1">—</p>
+                        </div>
+                        <div className={`${cardClass} col-span-2`}>
+                            <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Personal Best</p>
+                            <p className="text-lg font-bold text-white mt-1">—</p>
+                        </div>
+                    </div>
+                    <div className={`${cardClass} lg:col-span-2 min-h-[200px]`}>
+                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-4">Last 5 performances</p>
+                        <div className="h-40 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={MOCK_LAST_5_PERFORMANCES}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                    <XAxis dataKey="label" tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} />
+                                    <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
+                                    <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }} />
+                                    <Line type="monotone" dataKey="value" stroke="#f97316" strokeWidth={2} dot={{ fill: "#f97316", r: 4 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 4. Upcoming Events / Tournaments */}
+            <section>
+                <h2 className={sectionTitleClass}>Upcoming Events</h2>
+                <div className="space-y-3">
+                    {MOCK_UPCOMING_EVENTS.map((event) => (
+                        <div key={event.id} className={`${cardClass} flex flex-wrap items-center justify-between gap-4`}>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white truncate">{event.name}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-2 flex-wrap">
+                                    <Calendar size={12} />
+                                    {event.date}
+                                    <span className="text-gray-600">•</span>
+                                    <MapPin size={12} />
+                                    {event.location}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                                <span className={`text-xs font-medium px-2.5 py-1 rounded-lg ${event.status === "Registered" ? "bg-green-500/10 text-green-500" : "bg-white/10 text-gray-400"}`}>
+                                    {event.status}
+                                </span>
+                                {event.status === "Open" && (
+                                    <Link to="/athlete/events" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/20 text-primary text-xs font-semibold hover:bg-primary/30 transition-colors">
+                                        Register
+                                        <ChevronRight size={12} />
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* 5. AI Insights */}
+            <section>
+                <h2 className={`${sectionTitleClass} flex items-center gap-2`}>
+                    <Sparkles size={16} className="text-primary" />
+                    AI Insights
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className={`${cardClass}`}>
+                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Performance Trend</p>
+                        <p className="text-sm font-semibold text-emerald-500 mt-1 flex items-center gap-1.5">
+                            <TrendingUp size={14} /> Improving
+                        </p>
+                    </div>
+                    <div className={`${cardClass}`}>
+                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Suggested Training Focus</p>
+                        <p className="text-sm font-medium text-white/90 mt-1">Consistency & endurance</p>
+                    </div>
+                    <div className={`${cardClass}`}>
+                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Injury Risk</p>
+                        <p className="text-sm font-semibold text-green-500 mt-1 flex items-center gap-1.5">
+                            <AlertTriangle size={14} /> Low
+                        </p>
+                    </div>
+                    <div className={`${cardClass}`}>
+                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Fitness Score</p>
+                        <p className="text-lg font-bold text-white mt-1">82</p>
+                    </div>
+                </div>
+            </section>
+
+            {/* 6. Recent Activity Feed */}
+            <section>
+                <h2 className={sectionTitleClass}>Recent Activity</h2>
+                <div className={`${cardClass} space-y-3`}>
+                    {MOCK_ACTIVITY.map((item, i) => (
+                        <div key={i} className="flex items-start gap-4 py-2 border-b border-white/[0.04] last:border-0 last:pb-0 first:pt-0">
+                            <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-gray-400">
+                                <item.icon size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white/90">{item.text}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
+                            </div>
+                            <p className="text-[10px] text-gray-500 shrink-0">{item.time}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* 7. Quick Actions Panel */}
+            <section>
+                <h2 className={sectionTitleClass}>Quick Actions</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {QUICK_ACTIONS.map((action) => (
+                        <Link
+                            key={action.label}
+                            to={action.href}
+                            className={`${cardClass} flex flex-col items-center justify-center py-6 gap-3 group hover:bg-white/[0.04]`}
+                        >
+                            <div className={`w-11 h-11 rounded-xl bg-white/5 flex items-center justify-center ${action.color} group-hover:scale-105 transition-transform`}>
+                                <action.icon size={20} />
+                            </div>
+                            <span className="text-xs font-medium text-white/90 text-center leading-tight">{action.label}</span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
         </div>
     );
 };

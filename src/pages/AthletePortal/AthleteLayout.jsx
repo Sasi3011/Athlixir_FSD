@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
-    LayoutDashboard, User, Activity, Flame, Trophy,
+    LayoutDashboard, Activity, Flame, Trophy,
     Briefcase, GraduationCap, Calendar, MessageSquare,
-    DollarSign, Settings, LogOut, Search, Bell, Menu, X,
+    DollarSign, Settings, Search, Bell, Menu, X,
     CheckCircle2, ChevronRight
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -13,7 +13,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const SIDEBAR_LINKS = [
     { name: "Dashboard", href: "/athlete/dashboard", icon: LayoutDashboard },
-    { name: "My Profile", href: "/athlete/profile", icon: User },
     { name: "Performance Log", href: "/athlete/performance", icon: Activity },
     { name: "Injury & Recovery", href: "/athlete/injury", icon: Flame },
     { name: "Leaderboard", href: "/athlete/leaderboard", icon: Trophy },
@@ -26,7 +25,7 @@ const SIDEBAR_LINKS = [
 ];
 
 const AthleteLayout = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const { useAthleteProfile } = useAthlete();
     const { profile, loading: profileLoading } = useAthleteProfile(user?.uid);
     const location = useLocation();
@@ -50,15 +49,6 @@ const AthleteLayout = () => {
             navigate("/athlete/dashboard", { replace: true });
         }
     }, [user, profile, profileLoading, location.pathname, navigate]);
-
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate("/");
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-[#050505] text-white flex overflow-hidden font-sans">
@@ -99,17 +89,6 @@ const AthleteLayout = () => {
                         );
                     })}
                 </nav>
-
-                <div className="p-4 border-t border-white/5">
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-4 px-4 py-3 w-full text-gray-500 hover:text-red-500 transition-colors group"
-                        title={!isSidebarOpen ? "Sign Out" : ''}
-                    >
-                        <LogOut size={20} />
-                        {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">Sign Out</span>}
-                    </button>
-                </div>
             </aside>
 
             {/* Main Content Area */}
@@ -140,17 +119,20 @@ const AthleteLayout = () => {
                             <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-[#050505]"></span>
                         </button>
 
-                        <div className="flex items-center gap-3 pl-4 border-l border-white/10">
+                        <Link
+                            to="/athlete/profile"
+                            className="flex items-center gap-3 pl-4 border-l border-white/10 hover:opacity-90 transition-opacity group/header"
+                        >
                             <div className="text-right hidden sm:block">
-                                <p className="text-xs font-black uppercase tracking-wider text-white leading-tight">
+                                <p className="text-xs font-black uppercase tracking-wider text-white leading-tight group-hover/header:text-primary transition-colors">
                                     {profile?.permanentAthleteId || user?.displayName || "Athlete"}
                                 </p>
                                 <div className="flex items-center justify-end gap-1 mt-0.5">
                                     <CheckCircle2 size={10} className="text-primary" />
-                                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none">Verified {userRole}</span>
+                                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none">My Profile</span>
                                 </div>
                             </div>
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 p-[1px]">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 p-[1px] flex-shrink-0">
                                 <div className="w-full h-full rounded-xl bg-black flex items-center justify-center text-primary font-black uppercase overflow-hidden border border-white/10 shadow-lg">
                                     {user?.photoURL ? (
                                         <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -159,7 +141,7 @@ const AthleteLayout = () => {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     </div>
                 </header>
 
@@ -213,14 +195,6 @@ const AthleteLayout = () => {
                                     );
                                 })}
                             </nav>
-
-                            <button
-                                onClick={handleLogout}
-                                className="flex items-center gap-4 px-4 py-4 w-full text-red-500/80 hover:text-red-500 border-t border-white/10 mt-6"
-                            >
-                                <LogOut size={20} />
-                                <span className="text-sm font-bold uppercase tracking-wider">Sign Out</span>
-                            </button>
                         </motion.aside>
                     </div>
                 )}

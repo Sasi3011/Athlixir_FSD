@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, X } from 'lucide-react';
+import { Check, X, AlertTriangle, Info } from 'lucide-react';
 
 /**
  * SuccessAnimation Component
@@ -26,16 +26,16 @@ const SuccessAnimation = ({
             icon: X
         },
         warning: {
-            bg: 'bg-yellow-500/10',
-            border: 'border-yellow-500/20',
-            text: 'text-yellow-500',
-            icon: '⚠️'
+            bg: 'bg-amber-500/10',
+            border: 'border-amber-500/20',
+            text: 'text-amber-500',
+            icon: AlertTriangle
         },
         info: {
-            bg: 'bg-blue-500/10',
-            border: 'border-blue-500/20',
-            text: 'text-blue-500',
-            icon: 'ℹ️'
+            bg: 'bg-sky-500/10',
+            border: 'border-sky-500/20',
+            text: 'text-sky-500',
+            icon: Info
         }
     };
 
@@ -51,58 +51,28 @@ const SuccessAnimation = ({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className={`
-        ${config.bg} ${config.border} border rounded-2xl p-4 
-        flex items-center gap-3 shadow-2xl backdrop-blur-sm
-      `}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className={`relative overflow-hidden ${config.bg} ${config.border} border rounded-lg px-4 py-3 flex items-center gap-3 shadow-lg backdrop-blur-sm min-w-[240px] max-w-sm`}
         >
-            {/* Animated Icon */}
-            <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{
-                    type: 'spring',
-                    stiffness: 500,
-                    damping: 15,
-                    delay: 0.1
-                }}
-                className={`
-          w-10 h-10 ${config.bg} border ${config.border} rounded-xl 
-          flex items-center justify-center shrink-0
-        `}
-            >
-                {typeof Icon === 'string' ? (
-                    <span className="text-xl">{Icon}</span>
-                ) : (
-                    <Icon className={config.text} size={20} />
-                )}
-            </motion.div>
-
-            {/* Message */}
-            <div className="flex-1">
-                <p className={`font-bold ${config.text}`}>{message}</p>
+            <div className={`shrink-0 w-8 h-8 rounded-md flex items-center justify-center ${config.bg} ${config.border} border`}>
+                <Icon className={config.text} size={16} />
             </div>
-
-            {/* Close Button */}
+            <p className={`flex-1 text-sm font-medium text-white/95`}>{message}</p>
             {onClose && (
                 <button
+                    type="button"
                     onClick={onClose}
-                    className={`
-            p-1.5 hover:bg-white/10 rounded-lg transition-all
-            ${config.text} opacity-60 hover:opacity-100
-          `}
+                    className="shrink-0 p-1 text-white/50 hover:text-white/90 rounded transition-colors"
+                    aria-label="Close"
                 >
-                    <X size={16} />
+                    <X size={14} />
                 </button>
             )}
-
-            {/* Progress Bar */}
             {autoClose && (
                 <motion.div
-                    className={`absolute bottom-0 left-0 h-1 ${config.text.replace('text-', 'bg-')} rounded-b-2xl`}
+                    className={`absolute bottom-0 left-0 h-0.5 ${config.text.replace('text-', 'bg-')}`}
                     initial={{ width: '100%' }}
                     animate={{ width: '0%' }}
                     transition={{ duration: duration / 1000, ease: 'linear' }}
