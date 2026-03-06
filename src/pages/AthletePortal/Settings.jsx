@@ -1,17 +1,38 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Settings, User, Lock, Bell, Shield,
-    LogOut, ChevronRight, Eye, Smartphone,
-    Globe, Mail, Palette, Monitor, Zap
+    Settings, User, Lock, Bell, Shield, LogOut, ChevronRight,
+    Eye, EyeOff, Smartphone, Globe, Mail, Palette, Monitor, Sun,
+    Camera, Save, Key, ToggleLeft, ToggleRight, Trash2
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+
+const inputClass = "w-full bg-white/[0.06] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:border-primary/50 transition-colors";
+const labelClass = "block text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5";
 
 const SettingsPage = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("Profile");
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Toggle states for notifications & privacy
+    const [notifSettings, setNotifSettings] = useState({
+        email: true, push: true, sms: false,
+        eventReminders: true, performanceAlerts: true,
+        coachMessages: true, opportunityUpdates: true,
+        injuryAlerts: true, weeklyReport: false,
+    });
+
+    const [privacySettings, setPrivacySettings] = useState({
+        profilePublic: true, showPerformance: true,
+        showInjuryHistory: false, allowCoachAccess: true,
+        allowScoutView: true, showInLeaderboard: true,
+    });
+
+    const toggleNotif = (key) => setNotifSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+    const togglePrivacy = (key) => setPrivacySettings((prev) => ({ ...prev, [key]: !prev[key] }));
 
     const handleLogout = async () => {
         await logout();
@@ -26,177 +47,346 @@ const SettingsPage = () => {
         { name: "Appearance", icon: Palette },
     ];
 
-    return (
-        <div className="space-y-10 pb-20 max-w-6xl mx-auto">
-            <header className="flex items-center gap-4 mb-10">
-                <div className="p-4 bg-primary/10 text-primary rounded-3xl animate-pulse">
-                    <Settings size={32} />
-                </div>
+    const ToggleSwitch = ({ enabled, onToggle }) => (
+        <button type="button" onClick={onToggle} className={`relative w-10 h-5.5 rounded-full transition-colors ${enabled ? "bg-primary" : "bg-white/10"}`}>
+            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : "translate-x-0"}`} />
+        </button>
+    );
+
+    const SettingRow = ({ icon: Icon, title, description, action }) => (
+        <div className="flex items-center justify-between py-4 border-b border-white/[0.04] last:border-b-0">
+            <div className="flex items-center gap-3">
+                {Icon && <div className="p-2 rounded-lg bg-white/[0.04] text-gray-400"><Icon size={16} /></div>}
                 <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tight text-white italic">Control Center</h1>
-                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-[.3em]">Configure your ecosystem identity</p>
+                    <p className="text-sm font-medium text-white/90">{title}</p>
+                    {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
                 </div>
+            </div>
+            {action}
+        </div>
+    );
+
+    return (
+        <div className="space-y-8 pb-12 max-w-6xl mx-auto">
+            <header>
+                <h1 className="text-2xl font-bold text-white/95 flex items-center gap-2">
+                    <Settings size={28} className="text-primary" />
+                    Settings
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">Manage your account, security, notifications, and preferences</p>
             </header>
 
-            <div className="flex flex-col lg:flex-row gap-10">
-                {/* Sidebar Nav */}
-                <div className="w-full lg:w-72 space-y-2">
+            <div className="flex flex-col lg:flex-row gap-6">
+                {/* Sidebar */}
+                <div className="w-full lg:w-56 space-y-1">
                     {tabs.map((tab) => (
                         <button
                             key={tab.name}
                             onClick={() => setActiveTab(tab.name)}
-                            className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl border transition-all group ${activeTab === tab.name
-                                ? "bg-primary border-primary text-white shadow-xl shadow-primary/20"
-                                : "bg-white/5 border-white/5 text-gray-500 hover:text-white hover:border-white/10"
-                                }`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === tab.name
+                                ? "bg-primary/10 text-primary border border-primary/20"
+                                : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                            }`}
                         >
-                            <div className="flex items-center gap-4">
-                                <tab.icon size={18} />
-                                <span className="text-xs font-black uppercase tracking-widest">{tab.name}</span>
-                            </div>
-                            <ChevronRight size={14} className={`transition-transform duration-300 ${activeTab === tab.name ? "rotate-90 translate-x-1" : "group-hover:translate-x-1"}`} />
+                            <tab.icon size={16} />
+                            {tab.name}
                         </button>
                     ))}
 
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-6 py-5 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 transition-all mt-10 group"
-                    >
-                        <LogOut size={18} className="group-hover:translate-x-1 transition-all" />
-                        <span className="text-xs font-black uppercase tracking-widest">Destroy Session</span>
-                    </button>
+                    <div className="pt-4 mt-4 border-t border-white/[0.06]">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500/70 hover:text-red-500 hover:bg-red-500/5 transition-colors"
+                        >
+                            <LogOut size={16} />
+                            Log out
+                        </button>
+                    </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="flex-1 bg-black/40 border border-white/5 rounded-[3rem] p-10 backdrop-blur-3xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[120px] -mr-48 -mt-48 rounded-full"></div>
-
+                {/* Content */}
+                <div className="flex-1 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
                     <AnimatePresence mode="wait">
+                        {/* PROFILE TAB */}
                         {activeTab === "Profile" && (
                             <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-10 relative z-10"
+                                key="profile"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                className="space-y-6"
                             >
-                                <div className="flex justify-between items-center">
-                                    <h2 className="text-2xl font-black uppercase tracking-tight text-white italic">Identity Metadata</h2>
-                                    <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20">AGENT_ID: 82148</span>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">Profile Information</h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">Update your personal details and public profile</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Ecosystem Name</label>
-                                        <input
-                                            type="text"
-                                            defaultValue={user?.displayName || "Sasi Kiran"}
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-bold outline-none focus:border-primary/50 transition-all text-sm"
-                                        />
+                                {/* Avatar */}
+                                <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-primary/20 text-primary flex items-center justify-center text-lg font-bold">
+                                        {(user?.displayName || "S")[0].toUpperCase()}
                                     </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Verified Email</label>
+                                    <div>
+                                        <p className="text-sm font-medium text-white">{user?.displayName || "Athlete"}</p>
+                                        <button type="button" className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
+                                            <Camera size={12} /> Change photo
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className={labelClass}>Full Name</label>
+                                        <input type="text" defaultValue={user?.displayName || ""} className={inputClass} placeholder="Your name" />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Email</label>
                                         <div className="relative">
-                                            <input
-                                                type="email"
-                                                defaultValue={user?.email || "sasi@athlixir.com"}
-                                                disabled
-                                                className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 text-gray-600 font-bold outline-none text-sm cursor-not-allowed"
-                                            />
-                                            <Shield className="absolute right-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                                            <input type="email" defaultValue={user?.email || ""} disabled className={inputClass + " text-gray-500 cursor-not-allowed"} />
+                                            <Shield size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary" />
                                         </div>
                                     </div>
-                                    <div className="space-y-3 md:col-span-2">
-                                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">About Identity</label>
-                                        <textarea
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-white font-medium outline-none focus:border-primary/50 transition-all text-sm resize-none h-32"
-                                            placeholder="Write your brief..."
-                                        ></textarea>
+                                    <div>
+                                        <label className={labelClass}>Phone Number</label>
+                                        <input type="tel" className={inputClass} placeholder="+91 98765 43210" />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Date of Birth</label>
+                                        <input type="date" className={inputClass} />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className={labelClass}>Bio</label>
+                                        <textarea className={inputClass + " min-h-[80px] resize-none"} placeholder="Write a short bio about yourself..." />
                                     </div>
                                 </div>
 
-                                <div className="p-8 bg-primary/5 border border-primary/10 rounded-3xl flex items-center justify-between">
-                                    <div className="flex items-center gap-6">
-                                        <div className="p-4 bg-primary/20 text-primary rounded-2xl">
-                                            <Globe size={20} />
-                                        </div>
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Globe size={18} className="text-primary" />
                                         <div>
-                                            <h4 className="text-sm font-black text-white uppercase italic">Digital Presence</h4>
-                                            <p className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Control how you appear across global scout networks.</p>
+                                            <p className="text-sm font-medium text-white">Public Profile</p>
+                                            <p className="text-xs text-gray-500">Manage how your profile appears to scouts and coaches</p>
                                         </div>
                                     </div>
-                                    <button className="px-6 py-3 bg-primary text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg">Manage Links</button>
+                                    <button type="button" className="px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-medium text-white/90 hover:bg-white/10">
+                                        Edit Public Profile
+                                    </button>
+                                </div>
+
+                                <div className="flex justify-end pt-2">
+                                    <button type="button" className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 flex items-center gap-2">
+                                        <Save size={16} /> Save Changes
+                                    </button>
                                 </div>
                             </motion.div>
                         )}
 
+                        {/* SECURITY TAB */}
                         {activeTab === "Security" && (
                             <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-10 relative z-10"
+                                key="security"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                className="space-y-6"
                             >
-                                <h2 className="text-2xl font-black uppercase tracking-tight text-white italic">Pass Key Protocols</h2>
-                                <div className="space-y-6">
-                                    <div className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] flex items-center justify-between group hover:border-white/20 transition-all">
-                                        <div className="flex items-center gap-6">
-                                            <div className="p-4 bg-white/5 text-gray-500 rounded-2xl group-hover:text-primary transition-colors">
-                                                <Lock size={20} />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-black text-white uppercase italic">Access Password</h4>
-                                                <p className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest italic">Last rotated 45 days ago</p>
-                                            </div>
-                                        </div>
-                                        <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Update Pass Key</button>
-                                    </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">Security</h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">Manage your password, two-factor authentication, and sessions</p>
+                                </div>
 
-                                    <div className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] flex items-center justify-between group hover:border-white/20 transition-all">
-                                        <div className="flex items-center gap-6">
-                                            <div className="p-4 bg-white/5 text-gray-500 rounded-2xl group-hover:text-primary transition-colors">
-                                                <Smartphone size={20} />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-black text-white uppercase italic">Identity Verification (2FA)</h4>
-                                                <p className="text-[10px] text-primary font-black uppercase mt-1 tracking-widest">ACTIVE PROTECTED</p>
+                                {/* Change password */}
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <Key size={16} className="text-primary" />
+                                        <h3 className="text-sm font-semibold text-white">Change Password</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className={labelClass}>Current Password</label>
+                                            <div className="relative">
+                                                <input type={showPassword ? "text" : "password"} className={inputClass} placeholder="••••••••" />
+                                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                                                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                </button>
                                             </div>
                                         </div>
-                                        <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Disable MFA</button>
+                                        <div>
+                                            <label className={labelClass}>New Password</label>
+                                            <input type="password" className={inputClass} placeholder="••••••••" />
+                                        </div>
                                     </div>
+                                    <div className="flex justify-end">
+                                        <button type="button" className="px-4 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-medium text-white/90 hover:bg-white/10">
+                                            Update Password
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <SettingRow
+                                    icon={Smartphone}
+                                    title="Two-Factor Authentication"
+                                    description="Add an extra layer of security to your account"
+                                    action={
+                                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-xs font-medium">Enabled</span>
+                                    }
+                                />
+
+                                <SettingRow
+                                    icon={Monitor}
+                                    title="Active Sessions"
+                                    description="You're logged in on 1 device"
+                                    action={
+                                        <button type="button" className="text-xs text-primary font-medium hover:underline">Manage</button>
+                                    }
+                                />
+
+                                <div className="rounded-xl border border-red-500/10 bg-red-500/5 p-4 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-red-400">Delete Account</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">Permanently delete your account and all data</p>
+                                    </div>
+                                    <button type="button" className="px-3 py-2 rounded-lg border border-red-500/20 text-xs font-medium text-red-400 hover:bg-red-500/10 flex items-center gap-1">
+                                        <Trash2 size={12} /> Delete
+                                    </button>
                                 </div>
                             </motion.div>
                         )}
 
+                        {/* NOTIFICATIONS TAB */}
+                        {activeTab === "Notifications" && (
+                            <motion.div
+                                key="notifications"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                className="space-y-6"
+                            >
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">Notifications</h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">Choose how and when you'd like to be notified</p>
+                                </div>
+
+                                {/* Channels */}
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-1">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Notification Channels</p>
+                                    <SettingRow icon={Mail} title="Email Notifications" description="Receive updates via email" action={<ToggleSwitch enabled={notifSettings.email} onToggle={() => toggleNotif("email")} />} />
+                                    <SettingRow icon={Bell} title="Push Notifications" description="Browser and mobile push alerts" action={<ToggleSwitch enabled={notifSettings.push} onToggle={() => toggleNotif("push")} />} />
+                                    <SettingRow icon={Smartphone} title="SMS Notifications" description="Text messages for critical alerts" action={<ToggleSwitch enabled={notifSettings.sms} onToggle={() => toggleNotif("sms")} />} />
+                                </div>
+
+                                {/* Alert Types */}
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-1">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Alert Preferences</p>
+                                    <SettingRow title="Event Reminders" description="Reminders for upcoming events and deadlines" action={<ToggleSwitch enabled={notifSettings.eventReminders} onToggle={() => toggleNotif("eventReminders")} />} />
+                                    <SettingRow title="Performance Alerts" description="Notifications on performance score changes" action={<ToggleSwitch enabled={notifSettings.performanceAlerts} onToggle={() => toggleNotif("performanceAlerts")} />} />
+                                    <SettingRow title="Coach Messages" description="Real-time alerts for messages from coaches" action={<ToggleSwitch enabled={notifSettings.coachMessages} onToggle={() => toggleNotif("coachMessages")} />} />
+                                    <SettingRow title="Opportunity Updates" description="New scholarships, trials, and grants" action={<ToggleSwitch enabled={notifSettings.opportunityUpdates} onToggle={() => toggleNotif("opportunityUpdates")} />} />
+                                    <SettingRow title="Injury Alerts" description="Recovery progress and risk warnings" action={<ToggleSwitch enabled={notifSettings.injuryAlerts} onToggle={() => toggleNotif("injuryAlerts")} />} />
+                                    <SettingRow title="Weekly Report" description="Summary of your weekly performance" action={<ToggleSwitch enabled={notifSettings.weeklyReport} onToggle={() => toggleNotif("weeklyReport")} />} />
+                                </div>
+
+                                <div className="flex justify-end">
+                                    <button type="button" className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 flex items-center gap-2">
+                                        <Save size={16} /> Save Preferences
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* PRIVACY TAB */}
+                        {activeTab === "Privacy" && (
+                            <motion.div
+                                key="privacy"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                className="space-y-6"
+                            >
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">Privacy</h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">Control who can see your profile and data</p>
+                                </div>
+
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-1">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Profile Visibility</p>
+                                    <SettingRow title="Public Profile" description="Allow anyone to view your profile" action={<ToggleSwitch enabled={privacySettings.profilePublic} onToggle={() => togglePrivacy("profilePublic")} />} />
+                                    <SettingRow title="Show Performance Data" description="Display stats and scores publicly" action={<ToggleSwitch enabled={privacySettings.showPerformance} onToggle={() => togglePrivacy("showPerformance")} />} />
+                                    <SettingRow title="Show Injury History" description="Let others see your injury records" action={<ToggleSwitch enabled={privacySettings.showInjuryHistory} onToggle={() => togglePrivacy("showInjuryHistory")} />} />
+                                    <SettingRow title="Show in Leaderboard" description="Appear in public leaderboard rankings" action={<ToggleSwitch enabled={privacySettings.showInLeaderboard} onToggle={() => togglePrivacy("showInLeaderboard")} />} />
+                                </div>
+
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-1">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Access Permissions</p>
+                                    <SettingRow title="Coach Access" description="Allow assigned coaches to view your data" action={<ToggleSwitch enabled={privacySettings.allowCoachAccess} onToggle={() => togglePrivacy("allowCoachAccess")} />} />
+                                    <SettingRow title="Scout Visibility" description="Allow scouts to discover and view your profile" action={<ToggleSwitch enabled={privacySettings.allowScoutView} onToggle={() => togglePrivacy("allowScoutView")} />} />
+                                </div>
+
+                                <div className="flex justify-end">
+                                    <button type="button" className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 flex items-center gap-2">
+                                        <Save size={16} /> Save Privacy Settings
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* APPEARANCE TAB */}
                         {activeTab === "Appearance" && (
                             <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-10 relative z-10"
+                                key="appearance"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                className="space-y-6"
                             >
-                                <h2 className="text-2xl font-black uppercase tracking-tight text-white italic">Visual Experience</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="p-8 bg-primary/10 border-2 border-primary/30 rounded-[2.5rem] text-center">
-                                        <Monitor size={40} className="mx-auto text-primary mb-6" />
-                                        <h4 className="text-sm font-black text-white uppercase italic mb-2 tracking-widest">Dark Cinematic</h4>
-                                        <p className="text-[9px] text-primary font-black uppercase tracking-widest">Current active theme</p>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">Appearance</h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">Customize the look and feel of your dashboard</p>
+                                </div>
+
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Theme</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-5 text-center cursor-pointer">
+                                            <Monitor size={28} className="mx-auto text-primary mb-3" />
+                                            <p className="text-sm font-medium text-white">Dark</p>
+                                            <p className="text-[10px] text-primary mt-0.5">Active</p>
+                                        </div>
+                                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 text-center cursor-pointer opacity-50">
+                                            <Sun size={28} className="mx-auto text-gray-500 mb-3" />
+                                            <p className="text-sm font-medium text-gray-400">Light</p>
+                                            <p className="text-[10px] text-gray-600 mt-0.5">Coming soon</p>
+                                        </div>
+                                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 text-center cursor-pointer opacity-50">
+                                            <Palette size={28} className="mx-auto text-gray-500 mb-3" />
+                                            <p className="text-sm font-medium text-gray-400">System</p>
+                                            <p className="text-[10px] text-gray-600 mt-0.5">Coming soon</p>
+                                        </div>
                                     </div>
-                                    <div className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] text-center opacity-40">
-                                        <Zap size={40} className="mx-auto text-gray-600 mb-6" />
-                                        <h4 className="text-sm font-black text-gray-500 uppercase italic mb-2 tracking-widest">Performance Light</h4>
-                                        <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest">Locked Level 5</p>
+                                </div>
+
+                                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Accent Color</p>
+                                    <div className="flex gap-3">
+                                        {[
+                                            { color: "bg-orange-500", label: "Orange", active: true },
+                                            { color: "bg-blue-500", label: "Blue", active: false },
+                                            { color: "bg-emerald-500", label: "Green", active: false },
+                                            { color: "bg-purple-500", label: "Purple", active: false },
+                                            { color: "bg-red-500", label: "Red", active: false },
+                                        ].map((c) => (
+                                            <button
+                                                key={c.label}
+                                                type="button"
+                                                className={`w-8 h-8 rounded-full ${c.color} ${c.active ? "ring-2 ring-offset-2 ring-offset-[#0a0a0a] ring-white" : "opacity-40 hover:opacity-70"} transition-all`}
+                                                title={c.label}
+                                            />
+                                        ))}
                                     </div>
                                 </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
-
-                    {/* Global Save Button */}
-                    <div className="mt-16 pt-10 border-t border-white/5 flex justify-end">
-                        <button className="px-10 py-5 bg-primary text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.3em] shadow-2xl shadow-primary/30 hover:bg-orange-600 hover:scale-[1.02] active:scale-95 transition-all">
-                            Synchronize Settings
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

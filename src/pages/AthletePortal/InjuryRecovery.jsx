@@ -73,6 +73,14 @@ function computeInjuryRisk(injuries, perfLogs) {
     return { level: "Low", color: "text-emerald-500", bg: "bg-emerald-500/10" };
 }
 
+const STATIC_INJURIES = [
+    { id: 2001, injuryDate: "2026-02-20", injuryType: "Muscle Strain", bodyPart: "Knee", severity: "Moderate", painLevel: "6", cause: "Training", doctorDiagnosed: "Yes", medicalReportFile: "", recoveryStartDate: "2026-02-22", estimatedRecoveryWeeks: "3", rehabExercises: "Hamstring curls, Quad stretches, Wall sits", physioSessions: "4", medication: "Ibuprofen", weeklyPainUpdates: "Week1: 6, Week2: 4, Week3: 2", recoveryPercent: 75, clearedToPlay: "No", returnToPlayDate: "", notes: "Strained during intense sprint drills. Physio says good progress." },
+    { id: 2002, injuryDate: "2026-01-10", injuryType: "Sprain", bodyPart: "Ankle", severity: "Mild", painLevel: "4", cause: "Match", doctorDiagnosed: "Yes", medicalReportFile: "", recoveryStartDate: "2026-01-12", estimatedRecoveryWeeks: "2", rehabExercises: "Ankle circles, Resistance band exercises, Balance board", physioSessions: "3", medication: "Ice therapy", weeklyPainUpdates: "Week1: 4, Week2: 1", recoveryPercent: 100, clearedToPlay: "Yes", returnToPlayDate: "2026-01-26", notes: "Rolled ankle during fielding. Fully recovered now." },
+    { id: 2003, injuryDate: "2025-11-15", injuryType: "Muscle Strain", bodyPart: "Shoulder", severity: "Severe", painLevel: "8", cause: "Overuse", doctorDiagnosed: "Yes", medicalReportFile: "", recoveryStartDate: "2025-11-18", estimatedRecoveryWeeks: "6", rehabExercises: "Rotator cuff strengthening, Pendulum swings, Wall push-ups", physioSessions: "10", medication: "Diclofenac gel, Paracetamol", weeklyPainUpdates: "Week1: 8, Week2: 7, Week3: 5, Week4: 4, Week5: 2, Week6: 1", recoveryPercent: 100, clearedToPlay: "Yes", returnToPlayDate: "2025-12-28", notes: "Bowling shoulder injury from excessive overs. Required extended rest." },
+    { id: 2004, injuryDate: "2026-03-01", injuryType: "Ligament Tear", bodyPart: "Wrist", severity: "Moderate", painLevel: "7", cause: "Match", doctorDiagnosed: "Yes", medicalReportFile: "", recoveryStartDate: "2026-03-03", estimatedRecoveryWeeks: "4", rehabExercises: "Wrist flexion/extension, Grip strengthening, Forearm pronation", physioSessions: "2", medication: "Wrist brace, Anti-inflammatory", weeklyPainUpdates: "Week1: 7", recoveryPercent: 20, clearedToPlay: "No", returnToPlayDate: "", notes: "Landed awkwardly on wrist while diving for a catch." },
+    { id: 2005, injuryDate: "2025-09-05", injuryType: "Fracture", bodyPart: "Hand", severity: "Severe", painLevel: "9", cause: "Match", doctorDiagnosed: "Yes", medicalReportFile: "", recoveryStartDate: "2025-09-08", estimatedRecoveryWeeks: "8", rehabExercises: "Finger flexion, Hand grip exercises, Wax therapy", physioSessions: "12", medication: "Cast + Calcium supplements", weeklyPainUpdates: "Week1: 9, Week2: 7, Week3: 6, Week4: 5, Week5: 4, Week6: 3, Week7: 2, Week8: 1", recoveryPercent: 100, clearedToPlay: "Yes", returnToPlayDate: "2025-11-01", notes: "Finger fracture from a cricket ball. Cast for 4 weeks then rehab." },
+];
+
 const inputClass = "w-full bg-white/[0.06] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:border-primary/50";
 const labelClass = "block text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5";
 
@@ -91,7 +99,8 @@ const InjuryRecovery = () => {
 
     useEffect(() => {
         const stored = JSON.parse(localStorage.getItem(`injuries_${user?.uid}`) || "[]");
-        setInjuries(stored.sort((a, b) => new Date(b.injuryDate) - new Date(a.injuryDate)));
+        const data = stored.length > 0 ? stored : STATIC_INJURIES;
+        setInjuries(data.sort((a, b) => new Date(b.injuryDate) - new Date(a.injuryDate)));
     }, [user]);
 
     useEffect(() => {

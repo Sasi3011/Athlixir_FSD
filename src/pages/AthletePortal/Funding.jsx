@@ -1,165 +1,339 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-    DollarSign, TrendingUp, PieChart, Users,
-    ArrowUpRight, ShieldCheck, CreditCard,
-    Briefcase, Zap, Info, ChevronRight, Wallet
+    DollarSign, TrendingUp, Users, ArrowUpRight, ShieldCheck,
+    Briefcase, ChevronRight, Wallet, Search, Filter, X,
+    Calendar, MapPin, ExternalLink, BookmarkCheck, Bookmark, Tag, Clock
 } from "lucide-react";
 
+const SPONSORSHIP_TYPES = ["All", "Equipment + Stipend", "Full Training Grant", "Cash Sponsorship", "Government Scheme", "Crowdfunding"];
+
+const SPONSORSHIPS = [
+    {
+        id: 1, title: "Elite Football Equipment & Stipend Program", provider: "Adidas India",
+        type: "Equipment + Stipend", amount: "₹2,50,000/season", sport: "Football",
+        eligibility: "District rank < 10, Age 16–21", deadline: "2026-06-30", status: "Open",
+        description: "Full kit sponsorship including boots, training gear, and a monthly stipend for travel and nutrition. Top performers get brand ambassador opportunities.",
+        requirements: "Performance CV, District ranking certificate, Coach recommendation",
+        image: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+        id: 2, title: "Next-Gen Athletics Training Grant", provider: "Sports Authority Foundation",
+        type: "Full Training Grant", amount: "₹5,00,000/year", sport: "Athletics",
+        eligibility: "College-level gold medalist", deadline: "2026-05-15", status: "Open",
+        description: "Comprehensive training grant covering coaching fees, accommodation, nutrition plan, sports science support, and competition travel for one year.",
+        requirements: "Gold medal certificate, College letter, Fitness assessment report",
+        image: "https://images.unsplash.com/photo-1532444458054-01a7dd3e9fca?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+        id: 3, title: "Young Cricketers Cash Sponsorship", provider: "CRED Sports Fund",
+        type: "Cash Sponsorship", amount: "₹1,50,000", sport: "Cricket",
+        eligibility: "State-level representation, Under 19", deadline: "2026-04-20", status: "Open",
+        description: "One-time cash sponsorship for young cricketers to cover equipment, academy fees, and tournament participation costs.",
+        requirements: "State selection letter, BCCI registration, Income certificate",
+        image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+        id: 4, title: "Khelo India Athlete Support Scheme", provider: "Ministry of Youth Affairs",
+        type: "Government Scheme", amount: "₹6,28,000/year", sport: "All Sports",
+        eligibility: "Identified Khelo India athlete, National-level performance", deadline: "2026-07-31", status: "Open",
+        description: "Government scheme providing annual financial assistance for training, competition, equipment, and education for identified athletes under the Khelo India program.",
+        requirements: "Aadhaar, National ranking, SAI identification letter",
+        image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+        id: 5, title: "Swimming Excellence Program", provider: "Speedo India Foundation",
+        type: "Equipment + Stipend", amount: "₹1,80,000/year", sport: "Swimming",
+        eligibility: "National-level swimmer, Age 14–22", deadline: "2026-05-01", status: "Closing Soon",
+        description: "Premium swimwear, training equipment, monthly stipend, and access to international training camps for top swimmers.",
+        requirements: "National timing certificates, Coach endorsement, Medical fitness report",
+        image: "https://images.unsplash.com/photo-1519315901367-f34ff9154487?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+        id: 6, title: "Rural Sports Talent Fund", provider: "Tata Trusts",
+        type: "Full Training Grant", amount: "₹3,00,000/year", sport: "All Sports",
+        eligibility: "Rural domicile, District-level participation, Family income < ₹5L", deadline: "2026-08-15", status: "Open",
+        description: "Financial support for talented athletes from rural backgrounds covering training, equipment, travel, and nutrition supplements.",
+        requirements: "Domicile certificate, Income proof, Sports participation records",
+        image: "https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?auto=format&fit=crop&w=400&q=80"
+    },
+];
+
+function getStatusColor(status) {
+    if (status === "Open") return "bg-emerald-500/10 text-emerald-500";
+    if (status === "Closing Soon") return "bg-amber-500/10 text-amber-500";
+    if (status === "Applied") return "bg-blue-500/10 text-blue-400";
+    return "bg-gray-500/10 text-gray-400";
+}
+
+const inputClass = "w-full bg-white/[0.06] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:border-primary/50";
+
 const Funding = () => {
-    const sponsorships = [
-        {
-            id: 1,
-            title: "Global Soccer Elite Program",
-            provider: "Adidas India",
-            funding_type: "Equipment + Stipend",
-            amount: "₹2,50,000 / Season",
-            requirement: "District Rank < 10",
-            status: "Apply Now"
-        },
-        {
-            id: 2,
-            title: "Next-Gen Athletics Grant",
-            provider: "Sports Authority Foundation",
-            funding_type: "Full Training Grant",
-            amount: "₹5,00,000 / Annual",
-            requirement: "College Level Gold Medalist",
-            status: "Under Review"
-        }
-    ];
+    const [typeFilter, setTypeFilter] = useState("All");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [detailId, setDetailId] = useState(null);
+    const [bookmarks, setBookmarks] = useState([]);
+    const [applications, setApplications] = useState([]);
+
+    const filtered = useMemo(() => {
+        return SPONSORSHIPS.filter((s) => {
+            if (typeFilter !== "All" && s.type !== typeFilter) return false;
+            if (searchQuery && !(s.title + " " + s.provider + " " + s.sport).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+            return true;
+        });
+    }, [typeFilter, searchQuery]);
+
+    const detailItem = detailId ? SPONSORSHIPS.find((s) => s.id === detailId) : null;
+    const totalFunding = SPONSORSHIPS.reduce((sum, s) => {
+        const num = parseInt(s.amount.replace(/[^\d]/g, ""));
+        return sum + (num || 0);
+    }, 0);
+
+    const toggleBookmark = (id) => setBookmarks((prev) => prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]);
+    const applyFor = (id) => { if (!applications.includes(id)) setApplications((prev) => [...prev, id]); };
 
     return (
-        <div className="space-y-10 pb-20">
-            {/* Financial Dashboard Header */}
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-black/40 border border-white/5 rounded-[3rem] p-10 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[120px] -mr-48 -mt-48 rounded-full"></div>
-                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="p-4 bg-primary text-white rounded-3xl shadow-xl shadow-primary/20">
-                                    <DollarSign size={32} />
-                                </div>
-                                <h1 className="text-3xl font-black uppercase tracking-tight text-white italic">Funding Pipeline</h1>
-                            </div>
-                            <p className="text-gray-400 text-sm font-medium leading-relaxed max-w-md mb-8">
-                                Secure your athletic future. Apply for corporate sponsorships, government grants, or launch a verified crowdfunding identity for global scout support.
-                            </p>
-                            <div className="flex gap-4">
-                                <button className="px-8 py-4 bg-primary text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-2xl hover:bg-orange-600 transition-all flex items-center gap-3">
-                                    <Briefcase size={16} /> Apply for Funding
-                                </button>
-                                <button className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all">
-                                    Financial History
-                                </button>
-                            </div>
-                        </div>
+        <div className="space-y-8 pb-12 max-w-6xl mx-auto">
+            {/* Header */}
+            <header>
+                <h1 className="text-2xl font-bold text-white/95 flex items-center gap-2">
+                    <Wallet size={28} className="text-primary" />
+                    Funding & Sponsorships
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">Discover sponsorships, grants, and funding opportunities for your athletic career</p>
+            </header>
 
-                        <div className="w-full md:w-64 space-y-4">
-                            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl group-hover:border-primary/20 transition-all">
-                                <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-1">Total Funded</p>
-                                <p className="text-2xl font-black text-white italic">₹0.00</p>
-                            </div>
-                            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl group-hover:border-primary/20 transition-all">
-                                <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-1">Active Bids</p>
-                                <p className="text-2xl font-black text-primary italic">02</p>
-                            </div>
-                        </div>
-                    </div>
+            {/* Overview Cards */}
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Available Programs</p>
+                    <p className="text-2xl font-bold text-white mt-1">{SPONSORSHIPS.length}</p>
                 </div>
-
-                <div className="bg-white/5 border border-white/5 rounded-[3rem] p-10 flex flex-col justify-between group hover:border-blue-500/30 transition-all relative overflow-hidden">
-                    <div className="absolute inset-0 bg-blue-500/5 blur-[80px] -z-10 group-hover:bg-blue-500/10 transition-colors"></div>
-                    <div>
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl">
-                                <Users size={24} />
-                            </div>
-                            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
-                                <Zap size={10} fill="currentColor" /> Crowdfunding LIVE
-                            </span>
-                        </div>
-                        <h3 className="text-xl font-black text-white uppercase italic tracking-tight mb-4">Community Support</h3>
-                        <p className="text-xs text-gray-400 font-medium leading-relaxed mb-8 uppercase tracking-widest">
-                            Enable fans and believers to invest in your training journey directly.
-                        </p>
-                    </div>
-                    <button className="w-full py-4 bg-blue-500 text-white font-black rounded-2xl text-[10px] uppercase tracking-[.2em] shadow-xl shadow-blue-500/20 hover:bg-blue-600 transition-all">
-                        Launch Campaign
-                    </button>
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">My Applications</p>
+                    <p className="text-2xl font-bold text-white mt-1">{applications.length}</p>
+                </div>
+                <div className="rounded-2xl border border-white/[0.06] bg-emerald-500/5 p-5">
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Total Funded</p>
+                    <p className="text-2xl font-bold text-white mt-1">₹0</p>
+                </div>
+                <div className="rounded-2xl border border-white/[0.06] bg-primary/5 p-5">
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Total Available</p>
+                    <p className="text-2xl font-bold text-primary mt-1">₹{(totalFunding / 100000).toFixed(1)}L+</p>
                 </div>
             </section>
 
-            {/* Application List */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <section className="space-y-6">
-                    <h2 className="text-sm font-black text-gray-500 uppercase tracking-widest ml-4">Available Programs</h2>
-                    <div className="space-y-4">
-                        {sponsorships.map((spon) => (
-                            <motion.div
-                                key={spon.id}
-                                whileHover={{ scale: 1.01 }}
-                                className="bg-black/40 border border-white/5 p-8 rounded-[2.5rem] hover:border-primary/40 transition-all flex items-center justify-between group"
-                            >
-                                <div className="flex gap-6 items-center">
-                                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center font-black text-2xl text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                                        {spon.provider.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h4 className="text-lg font-black text-white uppercase italic tracking-tight">{spon.title}</h4>
-                                        <div className="flex items-center gap-3 text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1">
-                                            <ShieldCheck size={12} className="text-green-500" /> {spon.provider} • {spon.funding_type}
-                                        </div>
-                                    </div>
+            {/* Filters */}
+            <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search by name, provider, sport..."
+                        className={inputClass + " pl-9"}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                    {SPONSORSHIP_TYPES.map((t) => (
+                        <button
+                            key={t}
+                            type="button"
+                            onClick={() => setTypeFilter(t)}
+                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${typeFilter === t ? "bg-primary text-white" : "bg-white/[0.06] text-gray-400 hover:text-white border border-white/[0.08]"}`}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
+                <p className="text-xs text-gray-500">{filtered.length} programs found</p>
+            </section>
+
+            {/* Sponsorship Cards */}
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((spon, i) => {
+                    const applied = applications.includes(spon.id);
+                    const bookmarked = bookmarks.includes(spon.id);
+                    return (
+                        <motion.div
+                            key={spon.id}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden flex flex-col hover:border-primary/20 transition-all group"
+                        >
+                            <div className="h-36 relative overflow-hidden cursor-pointer" onClick={() => setDetailId(spon.id)}>
+                                <img
+                                    src={spon.image}
+                                    alt={spon.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                <div className="absolute top-3 left-3">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getStatusColor(applied ? "Applied" : spon.status)}`}>
+                                        {applied ? "Applied" : spon.status}
+                                    </span>
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-xl font-black text-white mb-1 italic">{spon.amount.split(' ')[0]}</div>
-                                    <button className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${spon.status === 'Apply Now'
-                                            ? "bg-primary/10 border-primary text-primary hover:bg-primary hover:text-white"
-                                            : "bg-white/5 border-white/10 text-gray-500"
-                                        }`}>
-                                        {spon.status}
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); toggleBookmark(spon.id); }}
+                                    className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/40 text-gray-300 hover:text-primary"
+                                >
+                                    {bookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+                                </button>
+                                <div className="absolute bottom-3 left-3">
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-white/10 text-white backdrop-blur-sm">{spon.sport}</span>
+                                </div>
+                            </div>
+
+                            <div className="p-4 flex flex-col flex-1">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">{spon.provider}</p>
+                                <h3 className="font-semibold text-white text-sm mt-0.5 cursor-pointer hover:text-primary transition-colors" onClick={() => setDetailId(spon.id)}>
+                                    {spon.title}
+                                </h3>
+                                <p className="text-xs text-gray-400 mt-2">{spon.eligibility}</p>
+
+                                <div className="flex items-center justify-between mt-auto pt-4">
+                                    <span className="text-sm font-semibold text-primary">{spon.amount}</span>
+                                    <span className="text-xs text-gray-500 flex items-center gap-1"><Calendar size={12} /> {spon.deadline}</span>
+                                </div>
+
+                                <div className="flex gap-2 mt-3 pt-3 border-t border-white/[0.06]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDetailId(spon.id)}
+                                        className="flex-1 py-2 rounded-lg border border-white/10 text-xs font-medium text-white/90 hover:bg-white/5"
+                                    >
+                                        View details
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => applyFor(spon.id)}
+                                        disabled={applied}
+                                        className="flex-1 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-1"
+                                    >
+                                        {applied ? "Applied" : "Apply"} <ArrowUpRight size={12} />
                                     </button>
                                 </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </section>
+                            </div>
+                        </motion.div>
+                    );
+                })}
+            </section>
 
-                <section className="bg-black/40 border border-white/5 rounded-[3.5rem] p-10 flex flex-col items-center justify-center text-center">
-                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 relative">
-                        <Wallet size={48} className="text-gray-700" />
-                        <div className="absolute -top-2 -right-2 bg-primary text-white p-2 rounded-xl border-4 border-[#050505]">
-                            <PieChart size={14} />
-                        </div>
-                    </div>
-                    <h3 className="text-2xl font-black text-white uppercase italic mb-4">Financial Identity Vault</h3>
-                    <p className="text-xs text-gray-500 font-black uppercase tracking-widest leading-relaxed max-w-sm mb-10">
-                        Connect your verified UPI or bank credentials to receive automated stipends from the Athlixir Ecosystem.
-                    </p>
-                    <div className="w-full flex gap-4 max-w-md">
-                        <button className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all flex items-center justify-center gap-3">
-                            <CreditCard size={16} /> Link Wallet
-                        </button>
-                        <button className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all flex items-center justify-center gap-3">
-                            <Info size={16} /> Guide
-                        </button>
-                    </div>
-                </section>
-            </div>
+            {filtered.length === 0 && (
+                <div className="text-center py-12 text-sm text-gray-500">No sponsorships match your filters.</div>
+            )}
 
-            {/* Bottom Support Info */}
-            <div className="p-8 bg-primary/5 border border-primary/10 rounded-[2.5rem] flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                    <div className="p-3 bg-primary/20 text-primary rounded-xl">
-                        <ShieldCheck size={20} />
-                    </div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[.25em]">Your financial data is protected by Athlixir's decentralized identity protocols.</p>
+            {/* Community Crowdfunding CTA */}
+            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-6 flex flex-col sm:flex-row items-center gap-4">
+                <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl shrink-0">
+                    <Users size={24} />
                 </div>
-                <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-2">
-                    Security Report <ChevronRight size={14} />
+                <div className="flex-1 text-center sm:text-left">
+                    <h3 className="font-semibold text-white text-sm">Community Crowdfunding</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Enable fans and supporters to contribute directly to your training journey.</p>
+                </div>
+                <button type="button" className="px-4 py-2.5 rounded-xl bg-blue-500/20 text-blue-400 text-sm font-medium hover:bg-blue-500/30 transition-colors">
+                    Launch Campaign
                 </button>
             </div>
+
+            {/* Security footer */}
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 flex items-center gap-3">
+                <ShieldCheck size={18} className="text-primary shrink-0" />
+                <p className="text-xs text-gray-500">Your financial data is protected with end-to-end encryption. All payments are processed through verified channels.</p>
+            </div>
+
+            {/* Detail Modal */}
+            <AnimatePresence>
+                {detailItem && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto bg-black/70 backdrop-blur-sm"
+                        onClick={() => setDetailId(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-w-2xl rounded-2xl bg-[#0f0f0f] border border-white/10 shadow-xl my-8"
+                        >
+                            <div className="h-48 relative overflow-hidden rounded-t-2xl">
+                                <img src={detailItem.image} alt={detailItem.title} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-transparent to-transparent" />
+                                <button type="button" onClick={() => setDetailId(null)} className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-lg hover:bg-black/80">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-5 -mt-6 relative z-10">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getStatusColor(applications.includes(detailItem.id) ? "Applied" : detailItem.status)}`}>
+                                            {applications.includes(detailItem.id) ? "Applied" : detailItem.status}
+                                        </span>
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-white/[0.06] text-gray-400">{detailItem.type}</span>
+                                    </div>
+                                    <h2 className="text-xl font-bold text-white">{detailItem.title}</h2>
+                                    <p className="text-xs text-gray-500 mt-1">by {detailItem.provider}</p>
+                                </div>
+
+                                <p className="text-sm text-gray-300">{detailItem.description}</p>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                                        <p className="text-[10px] text-gray-500 uppercase">Amount</p>
+                                        <p className="text-sm font-semibold text-primary mt-0.5">{detailItem.amount}</p>
+                                    </div>
+                                    <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                                        <p className="text-[10px] text-gray-500 uppercase">Sport</p>
+                                        <p className="text-sm font-medium text-white mt-0.5">{detailItem.sport}</p>
+                                    </div>
+                                    <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+                                        <p className="text-[10px] text-gray-500 uppercase">Deadline</p>
+                                        <p className="text-sm font-medium text-white mt-0.5">{detailItem.deadline}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Eligibility</p>
+                                    <p className="text-sm text-white/90">{detailItem.eligibility}</p>
+                                </div>
+
+                                <div>
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Required Documents</p>
+                                    <p className="text-sm text-white/90">{detailItem.requirements}</p>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleBookmark(detailItem.id)}
+                                        className="py-2.5 px-4 rounded-lg border border-white/10 text-sm font-medium text-white/90 hover:bg-white/5 flex items-center gap-2"
+                                    >
+                                        {bookmarks.includes(detailItem.id) ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                                        {bookmarks.includes(detailItem.id) ? "Saved" : "Save"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { applyFor(detailItem.id); setDetailId(null); }}
+                                        disabled={applications.includes(detailItem.id)}
+                                        className="flex-1 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {applications.includes(detailItem.id) ? "Already Applied" : "Apply Now"} <ArrowUpRight size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -61,7 +61,7 @@ const Features = () => {
                                     <span className="text-sm text-gray-300 font-medium">{item.text}</span>
                                 </div>
                             ))}
-                        </div>
+                        </div>  
                     </div>
 
                     {/* Secondary visual - 'Active Probes' to fill the lower right gap */}
