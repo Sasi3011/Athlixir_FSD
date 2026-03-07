@@ -37,15 +37,12 @@ const TeamAnalytics = () => {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-2 italic">Strategic <span className="text-primary NOT-italic">Analytics</span></h1>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em]">AI-Driven squad assessment & market projection</p>
+                    <h1 className="text-2xl font-bold text-white mb-1">Team Analytics</h1>
+                    <p className="text-sm text-gray-500">Weekly performance trends and squad overview</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                        <Globe size={16} /> Global Market Sync Active
-                    </span>
-                    <button className="px-8 py-3 bg-primary text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all">
-                        Deep Export
+                    <button className="px-5 py-2.5 bg-primary text-white font-medium rounded-xl text-sm shadow-lg shadow-primary/20 hover:bg-orange-600 transition-all">
+                        Export Report
                     </button>
                 </div>
             </div>
@@ -63,22 +60,22 @@ const TeamAnalytics = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
                         key={i}
-                        className="bg-black/40 border border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group"
+                        className="bg-white/[0.03] border border-white/[0.06] p-6 rounded-2xl relative overflow-hidden"
                     >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 bg-white/5 rounded-2xl ${kpi.color}`}>
-                                <kpi.icon size={20} />
+                        <div className="flex items-center justify-between mb-3">
+                            <div className={`p-2.5 bg-white/5 rounded-xl ${kpi.color}`}>
+                                <kpi.icon size={18} />
                             </div>
-                            <div className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest ${kpi.inverse
+                            <div className={`flex items-center gap-1 text-xs font-medium ${kpi.inverse
                                 ? (kpi.trend.startsWith('-') ? 'text-green-500' : 'text-red-500')
                                 : (kpi.trend.startsWith('+') ? 'text-green-500' : 'text-red-500')
                                 }`}>
-                                {kpi.trend.startsWith('+') ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                                {kpi.trend.startsWith('+') ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
                                 {kpi.trend}
                             </div>
                         </div>
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">{kpi.label}</h3>
-                        <div className="text-3xl font-black text-white italic">{kpi.value}</div>
+                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">{kpi.label}</p>
+                        <div className="text-2xl font-bold text-white">{kpi.value}</div>
                     </motion.div>
                 ))}
             </div>
@@ -86,13 +83,11 @@ const TeamAnalytics = () => {
             {/* Main Graphs Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Improvement Trend */}
-                <div className="lg:col-span-2 bg-black/40 border border-white/5 rounded-[3rem] p-10 min-w-0 overflow-hidden">
-                    <div className="flex justify-between items-center mb-10">
+                <div className="lg:col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 min-w-0 overflow-hidden">
+                    <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-1">Squad Progression Curve</h2>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic underline flex items-center gap-2">
-                                <TrendingUp size={12} className="text-primary" /> Integrated Athlete Growth Mapping
-                            </p>
+                            <h2 className="text-base font-semibold text-white mb-0.5">Squad Performance Trend</h2>
+                            <p className="text-xs text-gray-500">Training load vs improvement over time</p>
                         </div>
                     </div>
                     <div className="h-[400px] w-full relative">
@@ -124,8 +119,8 @@ const TeamAnalytics = () => {
                 </div>
 
                 {/* Distribution Pie */}
-                <div className="bg-black/40 border border-white/5 rounded-[3rem] p-10 flex flex-col">
-                    <h2 className="text-xl font-black uppercase tracking-tight text-white mb-10 italic">Tier Distribution</h2>
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 flex flex-col">
+                    <h2 className="text-base font-semibold text-white mb-6">Athlete Tier Distribution</h2>
                     <div className="flex-1 min-h-[300px] relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -149,14 +144,14 @@ const TeamAnalytics = () => {
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
-                    <div className="space-y-4 mt-8">
+                    <div className="space-y-3 mt-6">
                         {distributionData.map((entry, i) => (
                             <div key={i} className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }}></div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{entry.name}</span>
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                                    <span className="text-sm text-gray-400">{entry.name}</span>
                                 </div>
-                                <span className="text-sm font-black text-white italic">{entry.value}%</span>
+                                <span className="text-sm font-medium text-white">{entry.value}%</span>
                             </div>
                         ))}
                     </div>
@@ -166,11 +161,11 @@ const TeamAnalytics = () => {
             {/* Lower Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Team Injury Analysis */}
-                <div className="bg-black/40 border border-white/5 rounded-[3rem] p-10 min-w-0 overflow-hidden">
-                    <div className="flex items-center justify-between mb-10">
-                        <h2 className="text-xl font-black uppercase tracking-tight text-white">Integrity Matrix</h2>
-                        <div className="px-4 py-1.5 bg-green-500/10 border border-green-500/20 text-green-500 rounded-full text-[9px] font-black uppercase tracking-widest italic">
-                            Highly Resilient
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 min-w-0 overflow-hidden">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-base font-semibold text-white">Health Status</h2>
+                        <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 rounded-full text-xs">
+                            Healthy Squad
                         </div>
                     </div>
                     <div className="h-[250px] w-full relative">
@@ -192,38 +187,37 @@ const TeamAnalytics = () => {
                             </ReBarChart>
                         </ResponsiveContainer>
                     </div>
-                    <p className="mt-8 text-[11px] text-gray-500 font-medium leading-relaxed uppercase tracking-tight text-center italic">
-                        Squad health is <span className="text-green-500 font-black underline italic">4.2% above market average</span> for equivalent tier teams.
+                    <p className="mt-4 text-xs text-gray-500 text-center">
+                        Squad health is <span className="text-green-400 font-medium">4.2% above average</span> for equivalent tier teams.
                     </p>
                 </div>
 
                 {/* AI Predictions */}
-                <div className="bg-primary/5 border border-primary/20 rounded-[3rem] p-10 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[100px] -mr-48 -mt-48 rounded-full"></div>
+                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 relative overflow-hidden">
                     <div className="relative z-10 h-full flex flex-col">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/30">
-                                <ShieldCheck size={28} />
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                                <ShieldCheck size={22} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black uppercase tracking-tight text-white">AI Scout Prediction</h3>
-                                <p className="text-[10px] text-primary/80 font-bold uppercase tracking-widest">Projection for Q3 2026</p>
+                                <h3 className="text-sm font-semibold text-white">Scout Prediction</h3>
+                                <p className="text-xs text-primary/80">Q3 2026 projection</p>
                             </div>
                         </div>
-                        <div className="space-y-6 flex-1 flex flex-col justify-center">
-                            <div className="p-8 bg-black/40 border border-white/5 rounded-[2.5rem]">
-                                <p className="text-lg font-bold text-white leading-relaxed uppercase italic">
-                                    "Projected squad value to increase by <span className="text-primary font-black">$240k</span> based on current improvement metrics and upcoming league exposures."
+                        <div className="space-y-4 flex-1 flex flex-col justify-center">
+                            <div className="p-5 bg-black/40 border border-white/5 rounded-xl">
+                                <p className="text-sm text-white leading-relaxed">
+                                    Squad value projected to increase by <span className="text-primary font-semibold">$240k</span> based on current improvement metrics and upcoming league exposures.
                                 </p>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
-                                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Success Rate</div>
-                                    <div className="text-2xl font-black text-white italic">88.4%</div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="p-4 bg-white/5 border border-white/5 rounded-xl">
+                                    <p className="text-xs text-gray-500 mb-1">Success Rate</p>
+                                    <div className="text-xl font-bold text-white">88.4%</div>
                                 </div>
-                                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
-                                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Volatility</div>
-                                    <div className="text-2xl font-black text-white italic">Low (0.12)</div>
+                                <div className="p-4 bg-white/5 border border-white/5 rounded-xl">
+                                    <p className="text-xs text-gray-500 mb-1">Volatility</p>
+                                    <div className="text-xl font-bold text-white">Low</div>
                                 </div>
                             </div>
                         </div>

@@ -32,17 +32,17 @@ const InjuryReports = () => {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-2 italic">Medical <span className="text-primary NOT-italic">Watchlist</span></h1>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em]">Critical monitor of athlete physical integrity</p>
+                    <h1 className="text-2xl font-bold text-white mb-1">Injury Reports</h1>
+                    <p className="text-sm text-gray-500">Track and manage athlete injuries and recovery</p>
                 </div>
 
-                <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
                     {["All", "Mild", "Moderate", "Severe"].map((sev) => (
                         <button
                             key={sev}
                             onClick={() => setFilterSeverity(sev)}
-                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterSeverity === sev
-                                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${filterSeverity === sev
+                                    ? "bg-primary text-white shadow-md shadow-primary/20"
                                     : "text-gray-500 hover:text-white"
                                 }`}
                         >
@@ -55,17 +55,17 @@ const InjuryReports = () => {
             {/* Severity Breakdown Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: "Critical Cases", count: reports.filter(r => r.severity === 'Severe').length, color: "text-red-500", bg: "bg-red-500/10" },
-                    { label: "Moderate Risk", count: reports.filter(r => r.severity === 'Moderate').length, color: "text-orange-500", bg: "bg-orange-500/10" },
-                    { label: "Minor Issues", count: reports.filter(r => r.severity === 'Mild').length, color: "text-blue-500", bg: "bg-blue-500/10" },
+                    { label: "Critical Cases", count: reports.filter(r => r.severity === 'Severe').length, color: "text-red-400", bg: "bg-red-500/10" },
+                    { label: "Moderate", count: reports.filter(r => r.severity === 'Moderate').length, color: "text-orange-400", bg: "bg-orange-500/10" },
+                    { label: "Minor", count: reports.filter(r => r.severity === 'Mild').length, color: "text-blue-400", bg: "bg-blue-500/10" },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-black/40 border border-white/5 rounded-[2.5rem] p-8 flex items-center justify-between group hover:border-white/10 transition-all">
+                    <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">{stat.label}</p>
-                            <div className={`text-4xl font-black ${stat.color}`}>{stat.count}</div>
+                            <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
+                            <div className={`text-3xl font-bold ${stat.color}`}>{stat.count}</div>
                         </div>
-                        <div className={`w-14 h-14 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center`}>
-                            <AlertCircle size={28} />
+                        <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center`}>
+                            <AlertCircle size={22} />
                         </div>
                     </div>
                 ))}
@@ -79,51 +79,47 @@ const InjuryReports = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.1 }}
                         key={report.id}
-                        className={`bg-black/40 border ${report.severity === 'Severe' ? 'border-red-500/30 ring-1 ring-red-500/20' : 'border-white/5'} rounded-[3rem] p-8 group relative overflow-hidden`}
+                        className={`bg-white/[0.03] border ${report.severity === 'Severe' ? 'border-red-500/30' : 'border-white/[0.06]'} rounded-2xl p-6 group`}
                     >
                         {report.severity === 'Severe' && (
                             <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 blur-[80px] -mr-32 -mt-32 rounded-full"></div>
                         )}
 
-                        <div className="flex flex-col lg:flex-row lg:items-center gap-10 relative z-10">
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                             {/* Athlete Info */}
-                            <div className="flex items-center gap-6 min-w-[250px]">
-                                <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-primary text-xl font-black">
+                            <div className="flex items-center gap-4 min-w-[220px]">
+                                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary text-lg font-semibold">
                                     {report.name.charAt(0)}
                                 </div>
-                                <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-white uppercase tracking-tight">{report.name}</h3>
-                                    <div className={`inline-flex px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${getSeverityStyles(report.severity)}`}>
-                                        {report.severity} Priority
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">{report.name}</h3>
+                                    <div className={`inline-flex px-2 py-0.5 rounded-full text-xs mt-0.5 ${getSeverityStyles(report.severity)}`}>
+                                        {report.severity}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Injury Details */}
-                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                <div className="space-y-2">
-                                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-2 italic">
-                                        <Activity size={10} className="text-primary" /> Condition Issue
-                                    </span>
-                                    <div className="text-sm font-bold text-white uppercase">{report.issue}</div>
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                                <div className="space-y-1">
+                                    <span className="text-xs text-gray-500">Injury</span>
+                                    <div className="text-sm font-medium text-white">{report.issue}</div>
                                 </div>
-                                <div className="space-y-2">
-                                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-2 italic">
-                                        <Clock size={10} className="text-primary" /> Incident Date
-                                    </span>
-                                    <div className="text-sm font-bold text-white uppercase">{report.date}</div>
+                                <div className="space-y-1">
+                                    <span className="text-xs text-gray-500">Date</span>
+                                    <div className="text-sm font-medium text-white">{report.date}</div>
                                 </div>
-                                <div className="lg:col-span-2 space-y-3">
-                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                                        <span className="text-gray-500 underline">Recovery Cycle</span>
-                                        <span className="text-white italic">{report.progress}% Complete</span>
+                                <div className="lg:col-span-2 space-y-2">
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-gray-500">Recovery</span>
+                                        <span className="text-white font-medium">{report.progress}%</span>
                                     </div>
-                                    <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                    <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${report.progress}%` }}
                                             transition={{ duration: 1, ease: "easeOut" }}
-                                            className={`h-full rounded-full ${report.severity === 'Severe' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' :
+                                            className={`h-full rounded-full ${report.severity === 'Severe' ? 'bg-red-500' :
                                                     report.severity === 'Moderate' ? 'bg-orange-500' :
                                                         'bg-blue-500'
                                                 }`}
@@ -133,23 +129,21 @@ const InjuryReports = () => {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex lg:flex-col gap-3">
-                                <button className="px-6 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-[10px] font-black uppercase tracking-widest text-white">
+                            <div className="flex lg:flex-col gap-2">
+                                <button className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-sm text-white">
                                     View Log
                                 </button>
-                                <button className={`px-6 py-4 border rounded-2xl transition-all text-[10px] font-black uppercase tracking-widest ${report.severity === 'Severe' ? 'bg-red-500 text-white border-red-500 shadow-xl shadow-red-500/20' : 'bg-primary text-white border-primary shadow-xl shadow-primary/20'
+                                <button className={`px-4 py-2.5 border rounded-xl transition-all text-sm ${report.severity === 'Severe' ? 'bg-red-500 text-white border-red-500' : 'bg-primary text-white border-primary'
                                     }`}>
-                                    Override
+                                    Update
                                 </button>
                             </div>
                         </div>
 
-                        {/* Expandable Notes */}
-                        <div className="mt-8 pt-8 border-t border-white/5 flex items-start gap-4">
-                            <Info size={16} className="text-primary mt-1" />
-                            <p className="text-[11px] text-gray-400 font-medium leading-relaxed italic uppercase tracking-tight">
-                                Medical Notes: <span className="text-white normal-case not-italic">{report.notes}</span>
-                            </p>
+                        {/* Notes */}
+                        <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-start gap-3">
+                            <Info size={14} className="text-primary mt-0.5" />
+                            <p className="text-sm text-gray-400">{report.notes}</p>
                         </div>
                     </motion.div>
                 ))}

@@ -28,14 +28,14 @@ const OpportunitiesPosted = () => {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-2 italic">Career <span className="text-primary NOT-italic">Gateways</span></h1>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em]">Deploy trials & scholarships to the athlete ecosystem</p>
+                    <h1 className="text-2xl font-bold text-white mb-1">Opportunities</h1>
+                    <p className="text-sm text-gray-500">Manage posted trials, camps, and scholarships</p>
                 </div>
                 <button
                     onClick={() => setShowPostModal(true)}
-                    className="px-8 py-4 bg-primary text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-3"
+                    className="px-5 py-2.5 bg-primary text-white font-medium rounded-xl text-sm shadow-lg shadow-primary/20 hover:bg-orange-600 transition-all flex items-center gap-2"
                 >
-                    <Plus size={18} /> Deploy New Opportunity
+                    <Plus size={16} /> Post Opportunity
                 </button>
             </div>
 
@@ -43,8 +43,8 @@ const OpportunitiesPosted = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: List of Posted Opps */}
                 <div className="lg:col-span-2 space-y-6">
-                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white flex items-center gap-3 mb-8 italic">
-                        <Target size={16} className="text-primary" /> Active Deployments
+                    <h3 className="text-sm font-medium text-white flex items-center gap-2 mb-5">
+                        <Target size={14} className="text-primary" /> Posted Opportunities
                     </h3>
 
                     {opportunities.map((opp, i) => (
@@ -54,73 +54,73 @@ const OpportunitiesPosted = () => {
                             transition={{ delay: i * 0.1 }}
                             key={opp.id}
                             onClick={() => setSelectedOpp(opp)}
-                            className={`p-8 rounded-[3rem] border transition-all cursor-pointer group relative overflow-hidden ${selectedOpp?.id === opp.id
-                                    ? 'bg-primary/5 border-primary/30 ring-1 ring-primary/20 scale-[1.02]'
-                                    : 'bg-black/40 border-white/5 hover:border-white/20'
+                            className={`p-5 rounded-2xl border transition-all cursor-pointer group ${selectedOpp?.id === opp.id
+                                    ? 'bg-primary/5 border-primary/30'
+                                    : 'bg-white/[0.03] border-white/[0.06] hover:border-white/20'
                                 }`}
                         >
-                            <div className="flex justify-between items-start relative z-10">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${opp.type === 'Trial' ? 'bg-blue-500/10 text-blue-500' :
-                                                opp.type === 'Camp' ? 'bg-purple-500/10 text-purple-500' :
-                                                    'bg-orange-500/10 text-orange-500'
+                            <div className="flex justify-between items-start">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2.5 py-0.5 rounded-full text-xs ${opp.type === 'Trial' ? 'bg-blue-500/10 text-blue-400' :
+                                                opp.type === 'Camp' ? 'bg-purple-500/10 text-purple-400' :
+                                                    'bg-orange-500/10 text-orange-400'
                                             }`}>
                                             {opp.type}
                                         </span>
-                                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest italic flex items-center gap-2">
-                                            <Clock size={10} /> Deadline: {opp.deadline}
+                                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                                            <Clock size={10} /> {opp.deadline}
                                         </span>
                                     </div>
-                                    <h4 className="text-xl font-black text-white uppercase tracking-tight group-hover:text-primary transition-colors">{opp.title}</h4>
-                                    <div className="flex items-center gap-6">
-                                        <div className="flex items-center gap-2 text-gray-400">
-                                            <Users size={14} className="text-primary" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{opp.applicants} Applicants</span>
+                                    <h4 className="text-base font-medium text-white group-hover:text-primary transition-colors">{opp.title}</h4>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1.5 text-gray-400">
+                                            <Users size={12} className="text-primary" />
+                                            <span className="text-xs">{opp.applicants} Applicants</span>
                                         </div>
-                                        <div className={`flex items-center gap-2 ${opp.status === 'Active' ? 'text-green-500' : 'text-orange-500'}`}>
-                                            <CheckCircle2 size={14} />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{opp.status}</span>
+                                        <div className={`flex items-center gap-1.5 ${opp.status === 'Active' ? 'text-green-400' : 'text-orange-400'}`}>
+                                            <CheckCircle2 size={12} />
+                                            <span className="text-xs">{opp.status}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="p-4 bg-white/5 rounded-2xl group-hover:bg-primary/20 group-hover:text-primary transition-all">
-                                    <ChevronRight size={20} />
-                                </div>
+                                <button className="p-2.5 bg-white/5 rounded-xl text-gray-500 group-hover:text-primary transition-all">
+                                    <ChevronRight size={16} />
+                                </button>
                             </div>
                         </motion.div>
                     ))}
                 </div>
 
                 {/* Right Column: Applicant Insights / Dynamic Panel */}
-                <div className="bg-black/40 border border-white/5 rounded-[3rem] p-10 flex flex-col h-fit sticky top-10">
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 flex flex-col h-fit sticky top-10">
                     {selectedOpp ? (
                         <>
-                            <div className="flex justify-between items-center mb-10">
+                            <div className="flex justify-between items-center mb-5">
                                 <div>
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Applicant Monitor</h3>
-                                    <h4 className="text-sm font-black text-white uppercase tracking-tight italic underline">{selectedOpp.title.split(' ')[0]}...</h4>
+                                    <p className="text-xs text-primary mb-0.5">Applicants</p>
+                                    <h4 className="text-sm font-medium text-white">{selectedOpp.title.split(' ').slice(0, 3).join(' ')}...</h4>
                                 </div>
                                 <button className="p-3 bg-white/5 rounded-2xl text-gray-500 hover:text-white transition-all">
                                     <Filter size={18} />
                                 </button>
                             </div>
 
-                            <div className="flex-1 space-y-4">
+                            <div className="flex-1 space-y-3">
                                 {applicants.map((app, i) => (
-                                    <div key={i} className="p-5 bg-white/5 border border-white/5 rounded-3xl flex items-center justify-between group hover:border-primary/20 transition-all cursor-pointer">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-orange-600/10 flex items-center justify-center text-primary text-xs font-black border border-primary/10">
+                                    <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between cursor-pointer hover:border-primary/20 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-medium border border-primary/10">
                                                 {app.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <div className="text-[11px] font-black text-white hover:text-primary transition-colors uppercase">{app.name}</div>
-                                                <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-0.5">Score: {app.score}/100</div>
+                                                <div className="text-sm font-medium text-white">{app.name}</div>
+                                                <div className="text-xs text-gray-500">{app.score}/100</div>
                                             </div>
                                         </div>
-                                        <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${app.status === 'Shortlisted' ? 'bg-green-500/10 text-green-500' :
-                                                app.status === 'Rejected' ? 'bg-red-500/10 text-red-500' :
-                                                    'bg-blue-500/10 text-blue-500'
+                                        <div className={`px-2.5 py-0.5 rounded-full text-xs ${app.status === 'Shortlisted' ? 'bg-green-500/10 text-green-400' :
+                                                app.status === 'Rejected' ? 'bg-red-500/10 text-red-400' :
+                                                    'bg-blue-500/10 text-blue-400'
                                             }`}>
                                             {app.status}
                                         </div>
@@ -128,17 +128,17 @@ const OpportunitiesPosted = () => {
                                 ))}
                             </div>
 
-                            <button className="mt-10 w-full py-4 bg-primary text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 group">
-                                View Full List <ExternalLink size={14} className="group-hover:translate-x-1 transition-transform" />
+                            <button className="mt-6 w-full py-3 bg-primary text-white font-medium rounded-xl text-sm shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                                View All <ExternalLink size={13} />
                             </button>
                         </>
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
-                            <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center text-gray-600 mb-8 border border-white/5">
-                                <Users size={40} />
+                        <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
+                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-gray-500 mb-5 border border-white/5">
+                                <Users size={30} />
                             </div>
-                            <h4 className="text-sm font-black text-gray-500 uppercase tracking-tight mb-2">No Opportunity Selected</h4>
-                            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Select a deployment from the left to monitor incoming applicants.</p>
+                            <h4 className="text-sm font-medium text-gray-400 mb-1">No opportunity selected</h4>
+                            <p className="text-xs text-gray-600">Select an opportunity to see applicants.</p>
                         </div>
                     )}
                 </div>
@@ -159,34 +159,34 @@ const OpportunitiesPosted = () => {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="w-full max-w-2xl bg-[#080808] border border-white/10 rounded-[3rem] p-10 relative z-10 shadow-[0_0_100px_rgba(34,197,94,0.1)]"
+                            className="w-full max-w-xl bg-[#0F0F0F] border border-white/10 rounded-2xl p-8 relative z-10"
                         >
-                            <div className="flex justify-between items-center mb-10">
+                            <div className="flex justify-between items-center mb-6">
                                 <div>
-                                    <h2 className="text-3xl font-black text-white uppercase tracking-tight italic">Post <span className="text-primary NOT-italic">Opportunity</span></h2>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Acquiring talent for the Athlixir ecosystem</p>
+                                    <h2 className="text-xl font-bold text-white">Post Opportunity</h2>
+                                    <p className="text-sm text-gray-500">Fill in the details below</p>
                                 </div>
                                 <button onClick={() => setShowPostModal(false)} className="p-3 bg-white/5 rounded-2xl text-gray-500 hover:text-white transition-colors">
                                     <X size={24} />
                                 </button>
                             </div>
 
-                            <form className="space-y-8">
-                                <div className="space-y-3">
-                                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 ml-1">Opportunity Title</label>
+                            <form className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs text-gray-500">Title</label>
                                     <input
                                         type="text"
                                         placeholder="e.g. National Selection Trial - U19"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder:text-gray-700 focus:outline-none focus:border-primary/50 transition-all font-bold"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-white placeholder:text-gray-700 focus:outline-none focus:border-primary/50 transition-all text-sm"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 ml-1">Category</label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs text-gray-500">Category</label>
                                         <div className="relative">
-                                            <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
-                                            <select className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white focus:outline-none focus:border-primary/50 transition-all appearance-none uppercase text-[10px] font-black tracking-widest cursor-pointer">
+                                            <Award className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary" size={15} />
+                                            <select className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-9 pr-4 text-white text-sm focus:outline-none focus:border-primary/50 transition-all cursor-pointer">
                                                 <option>Trial</option>
                                                 <option>Selection Camp</option>
                                                 <option>Scholarship</option>
@@ -194,25 +194,25 @@ const OpportunitiesPosted = () => {
                                             </select>
                                         </div>
                                     </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 ml-1">Submission Deadline</label>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs text-gray-500">Deadline</label>
                                         <input
                                             type="date"
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-primary/50 transition-all uppercase text-[10px] font-black"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-white text-sm focus:outline-none focus:border-primary/50 transition-all"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 ml-1">Description & Requirements</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs text-gray-500">Description</label>
                                     <textarea
-                                        placeholder="Outline specific performance benchmarks needed..."
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-sm text-white focus:outline-none focus:border-primary/50 transition-all min-h-[150px]"
+                                        placeholder="Outline requirements and performance benchmarks..."
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 transition-all min-h-[100px]"
                                     />
                                 </div>
 
-                                <button className="w-full py-5 bg-primary text-white font-black rounded-3xl text-sm uppercase tracking-[0.3em] shadow-2xl shadow-primary/20 hover:bg-orange-600 transition-all flex items-center justify-center gap-3 mt-4">
-                                    <Globe size={20} /> Publish to Network
+                                <button className="w-full py-3.5 bg-primary text-white font-medium rounded-xl text-sm shadow-lg shadow-primary/20 hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
+                                    Publish Opportunity
                                 </button>
                             </form>
                         </motion.div>

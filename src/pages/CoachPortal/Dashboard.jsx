@@ -47,27 +47,13 @@ const CoachDashboard = () => {
         <div className="space-y-10 pb-20">
             {/* Header / Welcome */}
             <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-orange-600 p-[1px] shadow-2xl shadow-primary/20">
-                        <div className="w-full h-full rounded-3xl bg-black flex items-center justify-center text-primary text-3xl font-black">
-                            {user?.displayName?.charAt(0) || "C"}
-                        </div>
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-2">
-                            Welcome back, <span className="text-primary italic">Coach {user?.displayName?.split(' ')[0] || "Hub"}</span>
-                        </h1>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                                <Target size={12} className="text-primary" /> Elite Academy
-                            </span>
-                            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                                <Zap size={12} className="text-primary" /> Track & Field
-                            </span>
-                        </div>
-                    </div>
+                <div>
+                    <h1 className="text-2xl font-bold text-white mb-1">
+                        Welcome back, <span className="text-primary">Coach {user?.displayName?.split(' ')[0] || "Hub"}</span>
+                    </h1>
+                    <p className="text-sm text-gray-400">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                 </div>
-                <button className="px-8 py-4 bg-primary text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:bg-orange-600 transition-all hover:scale-[1.02]">
+                <button className="px-6 py-3 bg-primary text-white font-semibold rounded-xl text-sm shadow-lg shadow-primary/20 hover:bg-orange-600 transition-all">
                     Generate Team Report
                 </button>
             </section>
@@ -80,16 +66,16 @@ const CoachDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
                         key={i}
-                        className="bg-black/40 border border-white/5 p-8 rounded-[2.5rem] hover:border-primary/30 transition-all group relative overflow-hidden"
+                        className="bg-white/[0.03] border border-white/[0.06] p-6 rounded-2xl hover:border-primary/30 transition-all group relative overflow-hidden"
                     >
                         <div className={`absolute top-0 right-0 w-32 h-32 ${card.bg} blur-[60px] -mr-16 -mt-16 rounded-full group-hover:opacity-100 opacity-50 transition-opacity`}></div>
                         <div className="relative z-10">
-                            <div className={`w-12 h-12 ${card.bg} ${card.color} rounded-2xl flex items-center justify-center mb-6`}>
-                                <card.icon size={24} />
+                            <div className={`w-10 h-10 ${card.bg} ${card.color} rounded-xl flex items-center justify-center mb-4`}>
+                                <card.icon size={20} />
                             </div>
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">{card.label}</h3>
-                            <div className="text-4xl font-black text-white mb-2 tracking-tight">{card.value}</div>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{card.sub}</p>
+                            <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">{card.label}</p>
+                            <div className="text-3xl font-bold text-white mb-1">{card.value}</div>
+                            <p className="text-xs text-gray-500">{card.sub}</p>
                         </div>
                     </motion.div>
                 ))}
@@ -98,20 +84,20 @@ const CoachDashboard = () => {
             {/* Charts & Alerts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Performance Chart */}
-                <div className="lg:col-span-2 bg-black/40 border border-white/5 rounded-[2.5rem] p-8 min-w-0 min-h-[400px]">
-                    <div className="flex justify-between items-center mb-10">
+                <div className="lg:col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 min-w-0 min-h-[400px]">
+                    <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-1">Squad Performance Overview</h2>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Team load vs improvement trend</p>
+                            <h2 className="text-base font-semibold text-white mb-0.5">Squad Performance</h2>
+                            <p className="text-xs text-gray-500">Team training load vs improvement</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                <span className="text-[9px] font-black text-gray-500 uppercase">Load</span>
+                                <span className="text-xs text-gray-500">Load</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                <span className="text-[9px] font-black text-gray-500 uppercase">Growth</span>
+                                <span className="text-xs text-gray-500">Growth</span>
                             </div>
                         </div>
                     </div>
@@ -149,32 +135,32 @@ const CoachDashboard = () => {
                     </div>
                 </div>
 
-                {/* AI Alerts Section */}
-                <div className="bg-black/40 border border-white/5 rounded-[3rem] p-8 flex flex-col">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-xl font-black uppercase tracking-tight text-white italic">AI Risk Alerts</h2>
-                        <Zap size={20} className="text-primary animate-pulse" />
+                {/* Alerts Section */}
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 flex flex-col">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-base font-semibold text-white">Risk Alerts</h2>
+                        <Zap size={18} className="text-primary" />
                     </div>
 
                     <div className="flex-1 space-y-4">
                         {alerts.map((alert) => (
-                            <div key={alert.id} className="p-5 bg-white/5 border border-white/5 rounded-[2rem] group hover:border-primary/20 transition-all">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${alert.severity === 'high' ? 'bg-red-500/10 text-red-500' :
-                                        alert.severity === 'medium' ? 'bg-orange-500/10 text-orange-500' :
-                                            'bg-blue-500/10 text-blue-500'
+                            <div key={alert.id} className="p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl group hover:border-primary/20 transition-all">
+                                <div className="flex justify-between items-start mb-1.5">
+                                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${alert.severity === 'high' ? 'bg-red-500/10 text-red-400' :
+                                        alert.severity === 'medium' ? 'bg-orange-500/10 text-orange-400' :
+                                            'bg-blue-500/10 text-blue-400'
                                         }`}>
-                                        {alert.severity} Risk
+                                        {alert.severity === 'high' ? 'High' : alert.severity === 'medium' ? 'Medium' : 'Low'}
                                     </div>
-                                    <span className="text-[8px] font-bold text-gray-600 uppercase italic">{alert.time}</span>
+                                    <span className="text-[10px] text-gray-500">{alert.time}</span>
                                 </div>
-                                <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">{alert.message}</p>
+                                <p className="text-sm text-white group-hover:text-primary transition-colors">{alert.message}</p>
                             </div>
                         ))}
                     </div>
 
-                    <button className="mt-8 w-full py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-                        Review All Alerts
+                    <button className="mt-6 w-full py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl hover:bg-white/[0.06] text-sm font-medium text-gray-400 transition-all flex items-center justify-center gap-2 group">
+                        View All Alerts
                         <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
@@ -187,13 +173,13 @@ const CoachDashboard = () => {
                     { label: "Post Opportunity", icon: Briefcase, desc: "Scholarships & camps" },
                     { label: "Team Message", icon: MessageSquare, desc: "Notify all athletes" },
                 ].map((action, i) => (
-                    <button key={i} className="flex items-center gap-6 p-8 bg-white/5 border border-white/5 rounded-[2.5rem] hover:bg-primary/5 hover:border-primary/20 transition-all text-left group">
-                        <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:text-primary transition-all">
-                            <action.icon size={24} />
+                    <button key={i} className="flex items-center gap-4 p-5 bg-white/[0.03] border border-white/[0.06] rounded-2xl hover:bg-primary/5 hover:border-primary/20 transition-all text-left group">
+                        <div className="w-12 h-12 bg-white/[0.05] rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:text-primary transition-all">
+                            <action.icon size={20} />
                         </div>
                         <div>
-                            <h4 className="text-sm font-black uppercase tracking-widest text-white mb-1">{action.label}</h4>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{action.desc}</p>
+                            <h4 className="text-sm font-semibold text-white mb-0.5">{action.label}</h4>
+                            <p className="text-xs text-gray-500">{action.desc}</p>
                         </div>
                     </button>
                 ))}

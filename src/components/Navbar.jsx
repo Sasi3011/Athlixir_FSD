@@ -117,7 +117,7 @@ const Navbar = () => {
                         <>
                             <Link
                                 to="/login"
-                                className={`px-6 py-2.5 text-xs font-semibold uppercase tracking-wider border rounded-full transition-all ${isScrolled
+                                className={`px-5 py-2.5 text-sm font-medium border rounded-full transition-all ${isScrolled
                                     ? "border-white/20 text-white hover:bg-white/10"
                                     : "border-white/30 text-white hover:bg-white/10"
                                     }`}
@@ -127,28 +127,25 @@ const Navbar = () => {
 
                             <Link
                                 to="/signup"
-                                className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider bg-primary text-white rounded-full hover:bg-orange-600 transition-all shadow-[0_0_15px_rgba(255,87,34,0.3)] hover:shadow-[0_0_20px_rgba(255,87,34,0.5)]"
+                                className="px-5 py-2.5 text-sm font-medium bg-primary text-white rounded-full hover:bg-orange-600 transition-all shadow-[0_0_15px_rgba(255,87,34,0.3)] hover:shadow-[0_0_20px_rgba(255,87,34,0.5)]"
                             >
                                 Get Started
                             </Link>
                         </>
                     ) : (
-                        <div className="flex items-center space-x-6">
-                            <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Identity Verified</span>
-                                <span className="text-[11px] font-bold text-white uppercase tracking-tighter italic">{user.displayName || user.email.split('@')[0]}</span>
-                            </div>
+                        <div className="flex items-center space-x-4">
+                            <span className="text-sm font-medium text-gray-300">{user.displayName || user.email.split('@')[0]}</span>
 
                             <Link
                                 to="/athlete/dashboard"
-                                className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest bg-primary/10 border border-primary/20 text-primary rounded-full hover:bg-primary hover:text-white transition-all shadow-xl shadow-primary/5"
+                                className="px-5 py-2.5 text-sm font-medium bg-primary/10 border border-primary/20 text-primary rounded-full hover:bg-primary hover:text-white transition-all"
                             >
                                 Dashboard
                             </Link>
 
                             <button
                                 onClick={() => logout()}
-                                className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest border rounded-full transition-all ${isScrolled
+                                className={`px-4 py-2.5 text-sm font-medium border rounded-full transition-all ${isScrolled
                                     ? "border-white/10 text-gray-400 hover:text-white hover:bg-white/5"
                                     : "border-white/20 text-white hover:bg-white/10"
                                     }`}
@@ -230,17 +227,16 @@ const Navbar = () => {
                                 </>
                             ) : (
                                 <div className="space-y-4">
-                                    <div className="text-center p-6 bg-white/5 rounded-3xl border border-white/10">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Identity Verified</p>
-                                        <p className="text-white font-black text-xl italic">{user.displayName || user.email}</p>
+                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                                        <p className="text-sm font-medium text-white">{user.displayName || user.email}</p>
                                     </div>
 
                                     <Link
                                         to="/athlete/dashboard"
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className="w-full py-4 bg-primary text-white rounded-2xl font-black uppercase text-xs flex items-center justify-center shadow-xl shadow-primary/20"
+                                        className="w-full py-3.5 bg-primary text-white rounded-xl font-medium text-sm flex items-center justify-center shadow-lg shadow-primary/20"
                                     >
-                                        Enter Dashboard
+                                        Dashboard
                                     </Link>
 
                                     <button
@@ -248,7 +244,7 @@ const Navbar = () => {
                                             logout();
                                             setIsMobileMenuOpen(false);
                                         }}
-                                        className="w-full py-4 border border-white/10 rounded-2xl text-gray-500 font-black uppercase text-xs flex items-center justify-center hover:bg-white/5"
+                                        className="w-full py-3.5 border border-white/10 rounded-xl text-gray-400 font-medium text-sm flex items-center justify-center hover:bg-white/5"
                                     >
                                         Sign Out
                                     </button>

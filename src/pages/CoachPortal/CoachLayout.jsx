@@ -74,7 +74,7 @@ const CoachLayout = () => {
                                 title={!isSidebarOpen ? link.name : ''}
                             >
                                 <link.icon size={20} className={isActive ? "text-white" : "group-hover:text-primary transition-colors"} />
-                                {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider whitespace-nowrap">{link.name}</span>}
+                                {isSidebarOpen && <span className="text-sm font-medium whitespace-nowrap">{link.name}</span>}
                             </Link>
                         );
                     })}
@@ -87,7 +87,7 @@ const CoachLayout = () => {
                         title={!isSidebarOpen ? "Sign Out" : ''}
                     >
                         <LogOut size={20} />
-                        {isSidebarOpen && <span className="text-sm font-bold uppercase tracking-wider">Sign Out</span>}
+                        {isSidebarOpen && <span className="text-sm font-medium">Sign Out</span>}
                     </button>
                 </div>
             </aside>
@@ -122,12 +122,12 @@ const CoachLayout = () => {
 
                         <div className="flex items-center gap-3 pl-4 border-l border-white/10">
                             <div className="text-right hidden sm:block">
-                                <p className="text-xs font-black uppercase tracking-wider text-white leading-tight">
+                                <p className="text-sm font-semibold text-white leading-tight">
                                     Coach {user?.displayName?.split(' ')[0] || "Hub"}
                                 </p>
                                 <div className="flex items-center justify-end gap-1 mt-0.5">
                                     <CheckCircle2 size={10} className="text-primary" />
-                                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none">Verified Lead Coach</span>
+                                    <span className="text-[10px] font-medium text-gray-500 leading-none">Lead Coach</span>
                                 </div>
                             </div>
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 p-[1px]">
